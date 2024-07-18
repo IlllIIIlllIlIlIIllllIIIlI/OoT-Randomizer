@@ -870,5 +870,3 @@ SYMBOL TABLE:
 00000d60 g     F .text	00000018 DoorWarp1_KokiriEmerald_Overwrite
 000159a4 g     F .text	0000004c models_init
 00020438 g     O .data	00000022 key_counts
-
-

@@ -16,10 +16,10 @@ from version import __version__, base_version, supplementary_version, branch_url
 
 
 def is_bundled() -> bool:
-    return getattr(sys, 'frozen', False)
+    return getattr(sys, "frozen", False)
 
 
-def local_path(path: str = '') -> str:
+def local_path(path: str = "") -> str:
     if not hasattr(local_path, "cached_path"):
         local_path.cached_path = None
 
@@ -36,7 +36,7 @@ def local_path(path: str = '') -> str:
     return os.path.join(local_path.cached_path, path)
 
 
-def data_path(path: str = '') -> str:
+def data_path(path: str = "") -> str:
     if not hasattr(data_path, "cached_path"):
         data_path.cached_path = None
 
@@ -52,8 +52,8 @@ def data_path(path: str = '') -> str:
 
 
 def default_output_path(path: str) -> str:
-    if path == '':
-        path = local_path('Output')
+    if path == "":
+        path = local_path("Output")
 
     if not os.path.exists(path):
         os.mkdir(path)
@@ -62,23 +62,26 @@ def default_output_path(path: str) -> str:
 
 def read_logic_file(file_path: str):
     json_string = ""
-    with io.open(file_path, 'r') as file:
+    with io.open(file_path, "r") as file:
         for line in file.readlines():
-            json_string += line.split('#')[0].replace('\n', ' ')
-    json_string = re.sub(' +', ' ', json_string)
+            json_string += line.split("#")[0].replace("\n", " ")
+    json_string = re.sub(" +", " ", json_string)
     try:
         return json.loads(json_string)
     except json.JSONDecodeError as error:
-        raise Exception("JSON parse error around text:\n" + \
-                        json_string[error.pos-35:error.pos+35] + "\n" + \
-                        "                                   ^^\n")
+        raise Exception(
+            "JSON parse error around text:\n"
+            + json_string[error.pos - 35 : error.pos + 35]
+            + "\n"
+            + "                                   ^^\n"
+        )
 
 
 def open_file(filename: str) -> None:
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         os.startfile(filename)
     else:
-        open_command = 'open' if sys.platform == 'darwin' else 'xdg-open'
+        open_command = "open" if sys.platform == "darwin" else "xdg-open"
         subprocess.call([open_command, filename])
 
 
@@ -88,7 +91,7 @@ def get_version_bytes(a: str, b: int = 0x00, c: int = 0x00) -> list[int]:
     if not a:
         return version_bytes
 
-    sa = a.replace('v', '').replace(' ', '.').split('.')
+    sa = a.replace("v", "").replace(" ", ".").split(".")
 
     for i in range(0, 3):
         try:
@@ -126,38 +129,57 @@ class VersionError(Exception):
 def check_version(checked_version: str) -> None:
     if not hasattr(check_version, "base_regex"):
         check_version.base_regex = re.compile("""^[ \t]*__version__ = ['"](.+)['"]""", re.MULTILINE)
-        check_version.supplementary_regex = re.compile(r"^[ \t]*supplementary_version = (\d+)$", re.MULTILINE)
-        check_version.full_regex = re.compile("""^[ \t]*__version__ = f['"]*(.+)['"]""", re.MULTILINE)
+        check_version.supplementary_regex = re.compile(
+            r"^[ \t]*supplementary_version = (\d+)$", re.MULTILINE
+        )
+        check_version.full_regex = re.compile(
+            """^[ \t]*__version__ = f['"]*(.+)['"]""", re.MULTILINE
+        )
         check_version.url_regex = re.compile("""^[ \t]*branch_url = ['"](.+)['"]""", re.MULTILINE)
 
     if compare_version(checked_version, __version__) < 0:
         try:
-            with urllib.request.urlopen(f'{branch_url.replace("https://github.com", "https://raw.githubusercontent.com").replace("tree/", "")}/version.py') as versionurl:
+            with urllib.request.urlopen(
+                f'{branch_url.replace("https://github.com", "https://raw.githubusercontent.com").replace("tree/", "")}/version.py'
+            ) as versionurl:
                 version_file = versionurl.read().decode("utf-8")
 
                 base_match = check_version.base_regex.search(version_file, re.MULTILINE)
-                supplementary_match = check_version.supplementary_regex.search(version_file, re.MULTILINE)
+                supplementary_match = check_version.supplementary_regex.search(
+                    version_file, re.MULTILINE
+                )
                 full_match = check_version.full_regex.search(version_file, re.MULTILINE)
-                url_match = check_version.url_regex.search(version_file, re.MULTILINE)
+                # url_match = check_version.url_regex.search(version_file, re.MULTILINE)
 
                 remote_base_version = base_match.group(1) if base_match else ""
-                remote_supplementary_version = int(supplementary_match.group(1)) if supplementary_match else 0
+                remote_supplementary_version = (
+                    int(supplementary_match.group(1)) if supplementary_match else 0
+                )
                 remote_full_version = full_match.group(1) if full_match else remote_base_version
-                remote_full_version = remote_full_version \
-                    .replace('{base_version}', remote_base_version) \
-                    .replace('{supplementary_version}', str(remote_supplementary_version))
-                remote_branch_url = url_match.group(1) if url_match else ""
+                remote_full_version = remote_full_version.replace(
+                    "{base_version}", remote_base_version
+                ).replace("{supplementary_version}", str(remote_supplementary_version))
+                # remote_branch_url = url_match.group(1) if url_match else ""
 
                 upgrade_available = False
                 if compare_version(remote_base_version, base_version) > 0:
                     upgrade_available = True
-                elif compare_version(remote_base_version, base_version) == 0 and remote_supplementary_version > supplementary_version:
+                elif (
+                    compare_version(remote_base_version, base_version) == 0
+                    and remote_supplementary_version > supplementary_version
+                ):
                     upgrade_available = True
 
                 if upgrade_available:
-                    raise VersionError("You are on version " + __version__ + ", and the latest is version " + remote_full_version + ".")
+                    raise VersionError(
+                        "You are on version "
+                        + __version__
+                        + ", and the latest is version "
+                        + remote_full_version
+                        + "."
+                    )
         except (URLError, HTTPError) as e:
-            logger = logging.getLogger('')
+            logger = logging.getLogger("")
             logger.warning("Could not fetch latest version: " + str(e))
 
 
@@ -168,7 +190,7 @@ def check_version(checked_version: str) -> None:
 #   subprocess.call(['program_to_run', 'arg_1'], **subprocess_args())
 def subprocess_args(include_stdout: bool = True) -> dict[str, Any]:
     # The following is true only on Windows.
-    if hasattr(subprocess, 'STARTUPINFO'):
+    if hasattr(subprocess, "STARTUPINFO"):
         # On Windows, subprocess calls will pop up a command window by default
         # when run from Pyinstaller with the ``--noconsole`` option. Avoid this
         # distraction.
@@ -184,7 +206,7 @@ def subprocess_args(include_stdout: bool = True) -> dict[str, Any]:
     # ``subprocess.check_output`` doesn't allow specifying ``stdout``::
     # So, add it only if it's needed.
     if include_stdout:
-        ret = {'stdout': subprocess.PIPE}
+        ret = {"stdout": subprocess.PIPE}
     else:
         ret = {}
 
@@ -192,14 +214,13 @@ def subprocess_args(include_stdout: bool = True) -> dict[str, Any]:
     # with the ``--noconsole`` option requires redirecting everything
     # (stdin, stdout, stderr) to avoid an OSError exception
     # "[Error 6] the handle is invalid."
-    ret.update({'stdin': subprocess.PIPE,
-                'stderr': subprocess.PIPE,
-                'startupinfo': si,
-                'env': env})
+    ret.update({"stdin": subprocess.PIPE, "stderr": subprocess.PIPE, "startupinfo": si, "env": env})
     return ret
 
 
-def run_process(logger: logging.Logger, args: Sequence[str], stdin: Optional[AnyStr] = None) -> None:
+def run_process(
+    logger: logging.Logger, args: Sequence[str], stdin: Optional[AnyStr] = None
+) -> None:
     process = subprocess.Popen(args, bufsize=1, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     filecount = None
     if stdin is not None:
@@ -207,13 +228,13 @@ def run_process(logger: logging.Logger, args: Sequence[str], stdin: Optional[Any
     else:
         while True:
             line = process.stdout.readline()
-            if line != b'':
-                find_index = line.find(b'files remaining')
+            if line != b"":
+                find_index = line.find(b"files remaining")
                 if find_index > -1:
                     files = int(line[:find_index].strip())
                     if filecount is None:
                         filecount = files
-                logger.info(line.decode('utf-8').strip('\n'))
+                logger.info(line.decode("utf-8").strip("\n"))
             else:
                 break
 
@@ -237,4 +258,4 @@ def find_last(source_list: Sequence[Any], sought_element: Any) -> int:
 def powerset(iterable):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
     s = list(iterable)
-    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+    return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))

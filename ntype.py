@@ -6,11 +6,11 @@ import struct
 
 
 class uint16:
-    _struct = struct.Struct('>H')
+    _struct = struct.Struct(">H")
 
     @staticmethod
     def write(buffer: bytearray, address: int, value: int) -> None:
-        struct.pack_into('>H', buffer, address, value)
+        struct.pack_into(">H", buffer, address, value)
 
     @classmethod
     def read(cls, buffer: bytearray, address: int = 0) -> int:
@@ -27,11 +27,11 @@ class uint16:
 
 
 class uint32:
-    _struct = struct.Struct('>I')
+    _struct = struct.Struct(">I")
 
     @staticmethod
     def write(buffer: bytearray, address: int, value: int) -> None:
-        struct.pack_into('>I', buffer, address, value)
+        struct.pack_into(">I", buffer, address, value)
 
     @classmethod
     def read(cls, buffer: bytearray, address: int = 0) -> int:
@@ -40,19 +40,26 @@ class uint32:
     @staticmethod
     def bytes(value: int) -> bytearray:
         value = value & 0xFFFFFFFF
-        return bytearray([(value >> 24) & 0xFF, (value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF])
+        return bytearray(
+            [(value >> 24) & 0xFF, (value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF]
+        )
 
     @staticmethod
     def value(values: Sequence[int]) -> int:
-        return ((values[0] & 0xFF) << 24) | ((values[1] & 0xFF) << 16) | ((values[2] & 0xFF) << 8) | (values[3] & 0xFF)
+        return (
+            ((values[0] & 0xFF) << 24)
+            | ((values[1] & 0xFF) << 16)
+            | ((values[2] & 0xFF) << 8)
+            | (values[3] & 0xFF)
+        )
 
 
 class int32:
-    _struct = struct.Struct('>i')
+    _struct = struct.Struct(">i")
 
     @staticmethod
     def write(buffer: bytearray, address: int, value: int) -> None:
-        struct.pack_into('>i', buffer, address, value)
+        struct.pack_into(">i", buffer, address, value)
 
     @classmethod
     def read(cls, buffer: bytearray, address: int = 0) -> int:
@@ -61,11 +68,18 @@ class int32:
     @staticmethod
     def bytes(value: int) -> bytearray:
         value = value & 0xFFFFFFFF
-        return bytearray([(value >> 24) & 0xFF, (value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF])
+        return bytearray(
+            [(value >> 24) & 0xFF, (value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF]
+        )
 
     @staticmethod
     def value(values: Sequence[int]) -> int:
-        value: int = ((values[0] & 0xFF) << 24) | ((values[1] & 0xFF) << 16) | ((values[2] & 0xFF) << 8) | (values[3] & 0xFF)
+        value: int = (
+            ((values[0] & 0xFF) << 24)
+            | ((values[1] & 0xFF) << 16)
+            | ((values[2] & 0xFF) << 8)
+            | (values[3] & 0xFF)
+        )
         if value >= 0x80000000:
             value ^= 0xFFFFFFFF
             value += 1
@@ -76,11 +90,11 @@ class uint24:
     @staticmethod
     def write(buffer: bytearray, address: int, value: int) -> None:
         byte_arr: bytes = bytes(value)
-        buffer[address:address + 3] = byte_arr[0:3]
+        buffer[address : address + 3] = byte_arr[0:3]
 
     @staticmethod
     def read(buffer: bytearray, address: int = 0) -> int:
-        return (buffer[address+0] << 16) | (buffer[address+1] << 8) | buffer[address+2]
+        return (buffer[address + 0] << 16) | (buffer[address + 1] << 8) | buffer[address + 2]
 
     @staticmethod
     def bytes(value: int) -> bytearray:
@@ -116,7 +130,7 @@ class BigStream:
         if address is None:
             address = self.last_address
         self.last_address = address + length
-        return self.buffer[address: address + length]
+        return self.buffer[address : address + length]
 
     def read_int16(self, address: Optional[int] = None) -> int:
         if address is None:
@@ -142,7 +156,7 @@ class BigStream:
     def write_sbyte(self, address: Optional[int], value: int) -> None:
         if address is None:
             address = self.last_address
-        self.write_bytes(address, struct.pack('b', value))
+        self.write_bytes(address, struct.pack("b", value))
 
     def write_int16(self, address: Optional[int], value: int) -> None:
         if address is None:
@@ -162,13 +176,13 @@ class BigStream:
     def write_f32(self, address: Optional[int], value: float) -> None:
         if address is None:
             address = self.last_address
-        self.write_bytes(address, struct.pack('>f', value))
+        self.write_bytes(address, struct.pack(">f", value))
 
     def write_bytes(self, address: Optional[int], values: Sequence[int]) -> None:
         if address is None:
             address = self.last_address
         self.last_address = address + len(values)
-        self.buffer[address:address + len(values)] = values
+        self.buffer[address : address + len(values)] = values
 
     def write_int16s(self, address: Optional[int], values: Sequence[int]) -> None:
         if address is None:
@@ -201,7 +215,7 @@ class BigStream:
         self.buffer.append(value)
 
     def append_sbyte(self, value: int) -> None:
-        self.append_bytes(struct.pack('b', value))
+        self.append_bytes(struct.pack("b", value))
 
     def append_int16(self, value: int) -> None:
         self.append_bytes(uint16.bytes(value))
@@ -213,7 +227,7 @@ class BigStream:
         self.append_bytes(uint32.bytes(value))
 
     def append_f32(self, value: float) -> None:
-        self.append_bytes(struct.pack('>f', value))
+        self.append_bytes(struct.pack(">f", value))
 
     def append_bytes(self, values: Sequence[int]) -> None:
         value: int

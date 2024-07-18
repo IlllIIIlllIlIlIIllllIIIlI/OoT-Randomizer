@@ -44,21 +44,21 @@ class ModelPointerWriter:
         self.base: int = CODE_START
 
     def SetBase(self, base: str) -> None:
-        if base == 'Code':
+        if base == "Code":
             self.base = CODE_START
-        elif base == 'Player':
+        elif base == "Player":
             self.base = PLAYER_START
-        elif base == 'Hook':
+        elif base == "Hook":
             self.base = HOOK_START
-        elif base == 'Shield':
+        elif base == "Shield":
             self.base = SHIELD_START
-        elif base == 'Stick':
+        elif base == "Stick":
             self.base = STICK_START
-        elif base == 'GraveyardKid':
+        elif base == "GraveyardKid":
             self.base = GRAVEYARD_KID_START
-        elif base == 'Guard':
+        elif base == "Guard":
             self.base = GUARD_START
-        elif base == 'RunningMan':
+        elif base == "RunningMan":
             self.base = RUNNING_MAN_START
 
     def GoTo(self, dest: int) -> None:
@@ -71,21 +71,21 @@ class ModelPointerWriter:
         return self.base + self.offset
 
     def WriteModelData(self, data: int) -> None:
-        self.rom.write_bytes(self.GetAddress(), data.to_bytes(4, 'big'))
+        self.rom.write_bytes(self.GetAddress(), data.to_bytes(4, "big"))
         self.offset += self.advance
 
     def WriteModelData16(self, data: int) -> None:
-        self.rom.write_bytes(self.GetAddress(), data.to_bytes(2, 'big'))
+        self.rom.write_bytes(self.GetAddress(), data.to_bytes(2, "big"))
         self.offset += 2
 
     def WriteModelDataHi(self, data: int) -> None:
-        bytes = data.to_bytes(4, 'big')
+        bytes = data.to_bytes(4, "big")
         for i in range(2):
             self.rom.write_byte(self.GetAddress(), bytes[i])
             self.offset += 1
 
     def WriteModelDataLo(self, data: int) -> None:
-        bytes = data.to_bytes(4, 'big')
+        bytes = data.to_bytes(4, "big")
         for i in range(2, 4):
             self.rom.write_byte(self.GetAddress(), bytes[i])
             self.offset += 1
@@ -107,7 +107,13 @@ def scan(bytes: bytearray, data: bytearray | str, start: int = 0) -> int:
             # Bottle.Hand.L, Bow.String, Slingshot.String, Gauntlet.Fist.L, and Gauntlet.Fist.R respectively
             # And Hookshot which is a subset of Hookshot.Spike, Hookshot.Chain, Hookshot.Aiming.Reticule
             # This leads to false positives. So if the next byte is . (0x2E) then reset the count.
-            if isinstance(data, str) and data in ["Bottle", "Bow", "Slingshot", "Hookshot", "Fist.L", "Fist.R", "Blade.3"] and i < len(bytes) - 1 and bytes[i+1] == 0x2E:
+            if (
+                isinstance(data, str)
+                and data
+                in ["Bottle", "Bow", "Slingshot", "Hookshot", "Fist.L", "Fist.R", "Blade.3"]
+                and i < len(bytes) - 1
+                and bytes[i + 1] == 0x2E
+            ):
                 # Blade.3 is even wackier, as it is a subset of Blade.3.Break,
                 # and also a forward subset of Broken.Blade.3, and has a period in it
                 if data == "Blade.3":
@@ -119,8 +125,8 @@ def scan(bytes: bytearray, data: bytearray | str, start: int = 0) -> int:
                     # Make sure i is large enough, "Broken.Blad" is 11 chars (remember we're currently at the e)
                     if not resetCount and i > 10:
                         # Check if "Broken." immediately preceeds this string
-                        preceedingBytes = bytes[i-11:i-4]
-                        if preceedingBytes == bytearray(b'Broken.'):
+                        preceedingBytes = bytes[i - 11 : i - 4]
+                        if preceedingBytes == bytearray(b"Broken."):
                             resetCount = True
                     if resetCount:
                         dataindex = 0
@@ -128,8 +134,8 @@ def scan(bytes: bytearray, data: bytearray | str, start: int = 0) -> int:
                 # "Gauntlet.Fis" is 12 chars (we are currently at the t)
                 elif data in ["Fist.L", "Fist.R"] and i > 11:
                     # Check if "Gauntlet." immediately preceeds this string
-                    preceedingBytes = bytes[i-12:i-3]
-                    if preceedingBytes == bytearray(b'Gauntlet.'):
+                    preceedingBytes = bytes[i - 12 : i - 3]
+                    if preceedingBytes == bytearray(b"Gauntlet."):
                         dataindex = 0
                 # Default case for Bottle, Bow, Slingshot, Hookshot, reset count
                 else:
@@ -138,29 +144,34 @@ def scan(bytes: bytearray, data: bytearray | str, start: int = 0) -> int:
             # (Blade.3 and fists can check in the previous stanza since a . will be encountered at some point)
             if isinstance(data, str) and data == "Hookshot" and dataindex == 1 and i > 3:
                 # Check if "FPS." immediately preceeds this string
-                preceedingBytes = bytes[i-4:i]
-                if preceedingBytes == bytearray(b'FPS.'):
+                preceedingBytes = bytes[i - 4 : i]
+                if preceedingBytes == bytearray(b"FPS."):
                     dataindex = 0
             # More special cases added by the new pipeline...
             # Hand.L and Hand.R are forward subsets of Gauntlet.Hand.X, FPS.Hand.X
             # And Hand.L specifically is a forward subset of Bottle.Hand.L
             if isinstance(data, str) and data in ["Hand.L", "Hand.R"] and dataindex == 1:
                 if i > 8:
-                    preceedingBytes = bytes[i-9:i]
-                    if preceedingBytes == bytearray(b'Gauntlet.'):
+                    preceedingBytes = bytes[i - 9 : i]
+                    if preceedingBytes == bytearray(b"Gauntlet."):
                         dataindex = 0
                 if dataindex == 1 and i > 3:
-                    preceedingBytes = bytes[i-4:i]
-                    if preceedingBytes == bytearray(b'FPS.'):
+                    preceedingBytes = bytes[i - 4 : i]
+                    if preceedingBytes == bytearray(b"FPS."):
                         dataindex = 0
                 if data == "Hand.L" and dataindex == 1 and i > 6:
-                    preceedingBytes = bytes[i-7:i]
-                    if preceedingBytes == bytearray(b'Bottle.'):
+                    preceedingBytes = bytes[i - 7 : i]
+                    if preceedingBytes == bytearray(b"Bottle."):
                         dataindex = 0
             # Forearm.L and Forearm.R are forward subsets of FPS.Forearm.X
-            if isinstance(data, str) and data in ["Forearm.L", "Forearm.R"] and dataindex == 1 and i > 3:
-                preceedingBytes = bytes[i-4:i]
-                if preceedingBytes == bytearray(b'FPS.'):
+            if (
+                isinstance(data, str)
+                and data in ["Forearm.L", "Forearm.R"]
+                and dataindex == 1
+                and i > 3
+            ):
+                preceedingBytes = bytes[i - 4 : i]
+                if preceedingBytes == bytearray(b"FPS."):
                     dataindex = 0
             # All bytes have been found, so a match
             if dataindex == len(databytes):
@@ -173,7 +184,7 @@ def scan(bytes: bytearray, data: bytearray | str, start: int = 0) -> int:
                     offsetbytes = []
                     for j in range(4):
                         offsetbytes.append(bytes[i + j])
-                    return int.from_bytes(offsetbytes, 'big')
+                    return int.from_bytes(offsetbytes, "big")
         # Match has been broken, reset to start of string
         else:
             dataindex = 0
@@ -184,26 +195,33 @@ def scan(bytes: bytearray, data: bytearray | str, start: int = 0) -> int:
 def unwrap(zobj: bytearray, address: int) -> int:
     # An entry in the LUT will look something like 0xDE 01 0000 06014050
     # Only the last 3 bytes should be necessary.
-    data = int.from_bytes(zobj[address+5:address+8], 'big')
+    data = int.from_bytes(zobj[address + 5 : address + 8], "big")
     # If the data here points to another entry in the LUT, keep searching until
     # an address outside the table is found.
     while LUT_START <= data <= LUT_END:
         address = data
-        data = int.from_bytes(zobj[address+5:address+8], 'big')
+        data = int.from_bytes(zobj[address + 5 : address + 8], "big")
     return address
 
 
 # Used to overwrite pointers in the displaylist with new ones
 def WriteDLPointer(dl: list[int], index: int, data: int) -> None:
-    bytes = data.to_bytes(4, 'big')
+    bytes = data.to_bytes(4, "big")
     for i in range(4):
         dl[index + i] = bytes[i]
 
 
 # An extensive function which loads pieces from the vanilla Link model to add to the user-provided zobj
 # Based on https://github.com/hylian-modding/ML64-Z64Lib/blob/master/cores/Z64Lib/API/zzoptimize.ts function optimize()
-def LoadVanilla(rom: Rom, missing: list[str], rebase: int, linkstart: int, linksize: int,
-                pieces: dict[str, tuple[Offsets, int]], skips: dict[str, list[tuple[int, int]]]) -> tuple[list[int], dict[str, int]]:
+def LoadVanilla(
+    rom: Rom,
+    missing: list[str],
+    rebase: int,
+    linkstart: int,
+    linksize: int,
+    pieces: dict[str, tuple[Offsets, int]],
+    skips: dict[str, list[tuple[int, int]]],
+) -> tuple[list[int], dict[str, int]]:
     # Get vanilla "zobj" of Link's model
     vanillaData = []
     for i in range(linksize):
@@ -232,17 +250,17 @@ def LoadVanilla(rom: Rom, missing: list[str], rebase: int, linkstart: int, links
                     i += 8
                     continue
             op = vanillaData[i]
-            seg = vanillaData[i+4]
-            lo = int.from_bytes(vanillaData[i+4:i+8], 'big')
+            seg = vanillaData[i + 4]
+            lo = int.from_bytes(vanillaData[i + 4 : i + 8], "big")
             # Source for displaylist bytecode: https://hack64.net/wiki/doku.php?id=f3dex2
-            if op == 0xDF: # End of list
+            if op == 0xDF:  # End of list
                 # DF: G_ENDDL
                 # Terminates the current displaylist
                 # DF 00 00 00 00 00 00 00
-                displayList.extend(vanillaData[i:i+8]) # Make sure to write the DF
+                displayList.extend(vanillaData[i : i + 8])  # Make sure to write the DF
                 break
             # Shouldn't have to deal with DE (branch to new display list)
-            elif op == 0x01 and seg == segment: # Vertex data
+            elif op == 0x01 and seg == segment:  # Vertex data
                 # 01: G_VTX
                 # Fills the vertex buffer with vertex information
                 # 01 0[N N]0 [II] [SS SS SS SS]
@@ -253,10 +271,10 @@ def LoadVanilla(rom: Rom, missing: list[str], rebase: int, linkstart: int, links
                 vtxStart = lo & 0x00FFFFFF
                 # Grab the length of vertices from the instruction
                 # (Number of vertices will be from the 4th and 5th nibble as shown above, but each length 16)
-                vtxLen = int.from_bytes(vanillaData[i+1:i+3], 'big')
+                vtxLen = int.from_bytes(vanillaData[i + 1 : i + 3], "big")
                 if vtxStart not in vertices or len(vertices[vtxStart]) < vtxLen:
-                    vertices[vtxStart] = vanillaData[vtxStart:vtxStart+vtxLen]
-            elif op == 0xDA and seg == segment: # Push matrix
+                    vertices[vtxStart] = vanillaData[vtxStart : vtxStart + vtxLen]
+            elif op == 0xDA and seg == segment:  # Push matrix
                 # DA: G_MTX
                 # Apply transformation matrix
                 # DA 38 00 [PP] [AA AA AA AA]
@@ -265,8 +283,10 @@ def LoadVanilla(rom: Rom, missing: list[str], rebase: int, linkstart: int, links
                 # Grab the address from the low byte without the base offset
                 mtxStart = lo & 0x00FFFFFF
                 if mtxStart not in matrices:
-                    matrices[mtxStart] = vanillaData[mtxStart:mtxStart+0x40] # Matrices always 0x40 long
-            elif op == 0xFD and seg == segment: # Texture
+                    matrices[mtxStart] = vanillaData[
+                        mtxStart : mtxStart + 0x40
+                    ]  # Matrices always 0x40 long
+            elif op == 0xFD and seg == segment:  # Texture
                 # G_SETTIMG
                 # Sets the texture image offset
                 # FD [fi] 00 00 [bb bb bb bb]
@@ -275,7 +295,7 @@ def LoadVanilla(rom: Rom, missing: list[str], rebase: int, linkstart: int, links
                 # i: Texture bitsize
                 # b: Segmented address of texture
                 # Use 3rd nibble to get the texture type
-                textureType = (vanillaData[i+1] >> 3) & 0x1F
+                textureType = (vanillaData[i + 1] >> 3) & 0x1F
                 # Find the number of texel bits from the type
                 numTexelBits = 4 * (2 ** (textureType & 0x3))
                 # Get how many bytes there are per texel
@@ -284,14 +304,14 @@ def LoadVanilla(rom: Rom, missing: list[str], rebase: int, linkstart: int, links
                 texOffset = lo & 0x00FFFFFF
                 numTexels = -1
                 returnStack = []
-                j = i+8
+                j = i + 8
                 # The point of this loop is just to find the number of texels
                 # so that it may be multiplied by the bytesPerTexel so we know
                 # the length of the texture.
                 while j < len(vanillaData) and numTexels == -1:
                     opJ = vanillaData[j]
-                    segJ = vanillaData[j+4]
-                    loJ = int.from_bytes(vanillaData[j+4:j+8], 'big')
+                    segJ = vanillaData[j + 4]
+                    loJ = int.from_bytes(vanillaData[j + 4 : j + 8], "big")
                     if opJ == 0xDF:
                         # End of branched texture, or something wrong
                         if len(returnStack) == 0:
@@ -306,7 +326,7 @@ def LoadVanilla(rom: Rom, missing: list[str], rebase: int, linkstart: int, links
                     elif opJ == 0xDE:
                         # Branch to another texture
                         if segJ == segment:
-                            if vanillaData[j+1] == 0x0:
+                            if vanillaData[j + 1] == 0x0:
                                 returnStack.append(j)
                             j = loJ & 0x00FFFFFF
                     elif opJ == 0xF0:
@@ -338,8 +358,8 @@ def LoadVanilla(rom: Rom, missing: list[str], rebase: int, linkstart: int, links
                     j += 8
                 dataLen = bytesPerTexel * numTexels
                 if texOffset not in textures or len(textures[texOffset]) < dataLen:
-                    textures[texOffset] = vanillaData[texOffset:texOffset+dataLen]
-            displayList.extend(vanillaData[i:i+8])
+                    textures[texOffset] = vanillaData[texOffset : texOffset + dataLen]
+            displayList.extend(vanillaData[i : i + 8])
             i += 8
         displayLists[item] = (displayList, offset)
     # Create vanilla zobj of the pieces from data collected during crawl
@@ -347,19 +367,19 @@ def LoadVanilla(rom: Rom, missing: list[str], rebase: int, linkstart: int, links
     # Add textures, vertices, and matrices to the beginning of the zobj
     # Textures
     oldTex2New = {}
-    for (offset, texture) in textures.items():
+    for offset, texture in textures.items():
         newOffset = len(vanillaZobj)
         oldTex2New[offset] = newOffset
         vanillaZobj.extend(texture)
     # Vertices
     oldVer2New = {}
-    for (offset, vertex) in vertices.items():
+    for offset, vertex in vertices.items():
         newOffset = len(vanillaZobj)
         oldVer2New[offset] = newOffset
         vanillaZobj.extend(vertex)
     # Matrices
     oldMtx2New = {}
-    for (offset, matrix) in matrices.items():
+    for offset, matrix in matrices.items():
         newOffset = len(vanillaZobj)
         oldMtx2New[offset] = newOffset
         vanillaZobj.extend(matrix)
@@ -370,10 +390,10 @@ def LoadVanilla(rom: Rom, missing: list[str], rebase: int, linkstart: int, links
         dl = data[0]
         offset = data[1]
         oldDL2New[offset] = len(vanillaZobj)
-        for i in range (0, len(dl), 8):
+        for i in range(0, len(dl), 8):
             op = dl[i]
-            seg = dl[i+4]
-            lo = int.from_bytes(dl[i+4:i+8], 'big')
+            seg = dl[i + 4]
+            lo = int.from_bytes(dl[i + 4 : i + 8], "big")
             if seg == segment:
                 # If this instruction points to some data, it must be repointed
                 if op == 0x01:
@@ -407,9 +427,9 @@ def FindHierarchy(zobj: bytearray, agestr: str) -> int:
     # then return the position of the last segemented pointer.
     for i in range(0, len(zobj), 4):
         if zobj[i] == 0x06:
-            possible = int.from_bytes(zobj[i+1:i+4], 'big')
+            possible = int.from_bytes(zobj[i + 1 : i + 4], "big")
             if possible < len(zobj):
-                possible2 = int.from_bytes(zobj[i-3:i], 'big')
+                possible2 = int.from_bytes(zobj[i - 3 : i], "big")
                 diff = possible - possible2
                 if diff == 0x0C or diff == 0x10:
                     pos = i + 4
@@ -421,7 +441,11 @@ def FindHierarchy(zobj: bytearray, agestr: str) -> int:
                     if a != count:
                         continue
                     return pos - 4
-    raise ModelDefinitionError("No hierarchy found in " + agestr + " model- Did you check \"Link hierarchy format\" in zzconvert?")
+    raise ModelDefinitionError(
+        "No hierarchy found in "
+        + agestr
+        + ' model- Did you check "Link hierarchy format" in zzconvert?'
+    )
 
 
 TOLERANCE: int = 0x100
@@ -445,18 +469,18 @@ def CorrectSkeleton(zobj: bytearray, skeleton: list[list[int]], agestr: str) -> 
     # Get the hierarchy pointer
     hierarchy = FindHierarchy(zobj, agestr)
     # Get what the hierarchy pointer points to (pointer to limb 0)
-    limbPointer = int.from_bytes(zobj[hierarchy+1:hierarchy+4], 'big')
+    limbPointer = int.from_bytes(zobj[hierarchy + 1 : hierarchy + 4], "big")
     # Get the limb this points to
-    limb = int.from_bytes(zobj[limbPointer+1:limbPointer+4], 'big')
+    limb = int.from_bytes(zobj[limbPointer + 1 : limbPointer + 4], "big")
     # Go through each limb in the table
     hasVanillaSkeleton = True
     withinTolerance = True
     for i in range(1, 21):
         offset = limb + i * 0x10
         # X, Y, Z components are 2 bytes each
-        limbX = int.from_bytes(zobj[offset:offset+2], 'big')
-        limbY = int.from_bytes(zobj[offset+2:offset+4], 'big')
-        limbZ = int.from_bytes(zobj[offset+4:offset+6], 'big')
+        limbX = int.from_bytes(zobj[offset : offset + 2], "big")
+        limbY = int.from_bytes(zobj[offset + 2 : offset + 4], "big")
+        limbZ = int.from_bytes(zobj[offset + 4 : offset + 6], "big")
         skeletonX = skeleton[i][0]
         skeletonY = skeleton[i][1]
         skeletonZ = skeleton[i][2]
@@ -465,7 +489,11 @@ def CorrectSkeleton(zobj: bytearray, skeleton: list[list[int]], agestr: str) -> 
             hasVanillaSkeleton = False
             # Now check if the components are within a tolerance
             # Exclude limb 0 since that one is always zeroed out on models for some reason
-            if CheckDiff(limbX, skeletonX) or CheckDiff(limbY, skeletonY) or CheckDiff(limbZ, skeletonZ):
+            if (
+                CheckDiff(limbX, skeletonX)
+                or CheckDiff(limbY, skeletonY)
+                or CheckDiff(limbZ, skeletonZ)
+            ):
                 withinTolerance = False
                 break
     # If the skeleton is not vanilla but all components are within the tolerance, then force to vanilla
@@ -474,12 +502,12 @@ def CorrectSkeleton(zobj: bytearray, skeleton: list[list[int]], agestr: str) -> 
         for i in range(21):
             offset = limb + i * 0x10
             bytes = []
-            bytes.extend(int.to_bytes(skeleton[i][0], 2, 'big'))
-            bytes.extend(int.to_bytes(skeleton[i][1], 2, 'big'))
-            bytes.extend(int.to_bytes(skeleton[i][2], 2, 'big'))
+            bytes.extend(int.to_bytes(skeleton[i][0], 2, "big"))
+            bytes.extend(int.to_bytes(skeleton[i][1], 2, "big"))
+            bytes.extend(int.to_bytes(skeleton[i][2], 2, "big"))
             # Overwrite the X, Y, Z bytes with their vanilla values
             for j in range(6):
-                zobj[offset+j] = bytes[j]
+                zobj[offset + j] = bytes[j]
     return hasVanillaSkeleton
 
 
@@ -491,17 +519,17 @@ def LoadModel(rom: Rom, model: str, age: int) -> int:
     hierarchy = ADULT_HIERARCHY
     postconstantstart = ADULT_POST_START
     pieces = AdultPieces
-    path = data_path('Models/Adult')
+    path = data_path("Models/Adult")
     skips = adultSkips
     skeleton = adultSkeleton
-    agestr = "adult" # Just used for error messages
+    agestr = "adult"  # Just used for error messages
     if age == 1:
         linkstart = CHILD_START
         linksize = CHILD_SIZE
         hierarchy = CHILD_HIERARCHY
         postconstantstart = CHILD_POST_START
         pieces = ChildPieces
-        path = data_path('Models/Child')
+        path = data_path("Models/Child")
         skips = childSkips
         skeleton = childSkeleton
         agestr = "child"
@@ -511,7 +539,15 @@ def LoadModel(rom: Rom, model: str, age: int) -> int:
     file.close()
     zobj = bytearray(zobj)
     if len(zobj) > linksize:
-        raise ModelDefinitionError("Model for " + agestr + " too large- It is " + str(len(zobj)) + " bytes, but must be at most " + str(linksize) + " bytes.")
+        raise ModelDefinitionError(
+            "Model for "
+            + agestr
+            + " too large- It is "
+            + str(len(zobj))
+            + " bytes, but must be at most "
+            + str(linksize)
+            + " bytes."
+        )
     # See if the string MODLOADER64 appears before the LUT- if so this is a PlayAs model and needs no further processing
     if scan(zobj, "MODLOADER64") == -1:
         # First, make sure all important bytes are zeroed out
@@ -520,7 +556,11 @@ def LoadModel(rom: Rom, model: str, age: int) -> int:
         # Locate the manifest
         footerstart = scan(zobj, "!PlayAsManifest0")
         if footerstart == -1:
-            raise ModelDefinitionError("No manifest found in " + agestr + " model- Did you check \"Embed play-as data\" in zzconvert?")
+            raise ModelDefinitionError(
+                "No manifest found in "
+                + agestr
+                + ' model- Did you check "Embed play-as data" in zzconvert?'
+            )
         startaddr = footerstart - len("!PlayAsManifest0")
         # Check if this is a new pipeline model
         if scan(zobj, "riggedmesh", startaddr) != -1:
@@ -539,17 +579,26 @@ def LoadModel(rom: Rom, model: str, age: int) -> int:
                 present[piece] = offset
         if len(missing) > 0:
             # Load vanilla model data for missing pieces
-            (vanillaZobj, DLOffsets) = LoadVanilla(rom, missing, startaddr, linkstart, linksize, pieces, skips)
+            (vanillaZobj, DLOffsets) = LoadVanilla(
+                rom, missing, startaddr, linkstart, linksize, pieces, skips
+            )
             # Write vanilla zobj data to end of model zobj
             i = 0
             for byte in vanillaZobj:
                 zobj.insert(startaddr + i, byte)
                 i += 1
             if len(zobj) > linksize:
-                raise ModelDefinitionError("After processing, model for " + agestr + " too large- It is "
-                + str(len(zobj)) + " bytes, but must be at most " + str(linksize) + " bytes.")
+                raise ModelDefinitionError(
+                    "After processing, model for "
+                    + agestr
+                    + " too large- It is "
+                    + str(len(zobj))
+                    + " bytes, but must be at most "
+                    + str(linksize)
+                    + " bytes."
+                )
         # Now we have to set the lookup table for each item
-        for (piece, offset) in DLOffsets.items():
+        for piece, offset in DLOffsets.items():
             # Add the starting address to each offset so they're accurate to the updated zobj
             DLOffsets[piece] = offset + startaddr
         DLOffsets.update(present)
@@ -557,27 +606,27 @@ def LoadModel(rom: Rom, model: str, age: int) -> int:
             lut = pieces[item][0] - BASE_OFFSET
             entry = unwrap(zobj, lut)
             zobj[entry] = 0xDE
-            zobj[entry+1] = 0x01
+            zobj[entry + 1] = 0x01
             entry += 4
             dladdress = DLOffsets[item] + BASE_OFFSET
-            dladdressbytes = dladdress.to_bytes(4, 'big')
+            dladdressbytes = dladdress.to_bytes(4, "big")
             for byte in dladdressbytes:
                 zobj[entry] = byte
                 entry += 1
         # Put prefix for easily finding LUT in RAM
         i = 0
         for byte in "HEYLOOKHERE".encode():
-            zobj[LUT_START+i] = byte
+            zobj[LUT_START + i] = byte
             i += 1
         # Set constants in the LUT
-        file = open(os.path.join(path, 'Constants/preconstants.zobj'), "rb")
+        file = open(os.path.join(path, "Constants/preconstants.zobj"), "rb")
         constants = file.read()
         file.close()
         i = 0
         for byte in constants:
             zobj[PRE_CONSTANT_START + i] = byte
             i += 1
-        file = open(os.path.join(path, 'Constants/postconstants.zobj'), "rb")
+        file = open(os.path.join(path, "Constants/postconstants.zobj"), "rb")
         constants = file.read()
         file.close()
         i = 0
@@ -586,20 +635,22 @@ def LoadModel(rom: Rom, model: str, age: int) -> int:
             i += 1
         # Set up hierarchy pointer
         hierarchyOffset = FindHierarchy(zobj, agestr)
-        hierarchyBytes = zobj[hierarchyOffset:hierarchyOffset+4] # Get the data the offset points to
+        hierarchyBytes = zobj[
+            hierarchyOffset : hierarchyOffset + 4
+        ]  # Get the data the offset points to
         for i in range(4):
             zobj[hierarchy - BASE_OFFSET + i] = hierarchyBytes[i]
-        zobj[hierarchy - BASE_OFFSET + 4] = 0x15 # Number of limbs
-        zobj[hierarchy - BASE_OFFSET + 8] = 0x12 # Number of limbs to draw
+        zobj[hierarchy - BASE_OFFSET + 4] = 0x15  # Number of limbs
+        zobj[hierarchy - BASE_OFFSET + 8] = 0x12  # Number of limbs to draw
         # Save zobj for testing
-        #with open(path + "/Test_Processed.zobj", "wb") as f:
+        # with open(path + "/Test_Processed.zobj", "wb") as f:
         #    f.write(zobj)
     # Correct skeleton if it should be corrected
     CorrectSkeleton(zobj, skeleton, agestr)
     # Write zobj to vanilla object (object_link_boy or object_link_child)
     rom.write_bytes(linkstart, zobj)
     # Finally, want to return an address with a DF instruction for use when writing the model data
-    dfBytes = bytearray(b'\xDF\x00\x00\x00\x00\x00\x00\x00')
+    dfBytes = bytearray(b"\xdf\x00\x00\x00\x00\x00\x00\x00")
     return scan(zobj, dfBytes) - 8
 
 
@@ -615,9 +666,9 @@ def patch_model_adult(rom: Rom, settings: Settings, log: CosmeticsLog) -> None:
             choices.remove("Default")
             choices.remove("Random")
             model = random.choice(choices)
-        model = data_path(f'Models/Adult/{model}.zobj')
+        model = data_path(f"Models/Adult/{model}.zobj")
     pathsplit = os.path.basename(model)
-    log.settings.model_adult = pathsplit.split('.')[0]
+    log.settings.model_adult = pathsplit.split(".")[0]
 
     # Load and process model
     dfAddress = LoadModel(rom, model, 0)
@@ -752,7 +803,7 @@ def patch_model_adult(rom: Rom, settings: Settings, log: CosmeticsLog) -> None:
     writer.GoTo(0x6A66A)
     writer.WriteModelDataLo(Offsets.ADULT_LINK_LUT_DL_HOOKSHOT_AIM)
 
-    writer.SetBase('Hook')
+    writer.SetBase("Hook")
     writer.GoTo(0xA72)
     writer.WriteModelDataHi(Offsets.ADULT_LINK_LUT_DL_HOOKSHOT_HOOK)
     writer.GoTo(0xA76)
@@ -764,13 +815,13 @@ def patch_model_adult(rom: Rom, settings: Settings, log: CosmeticsLog) -> None:
     writer.GoTo(0xBA8)
     writer.WriteModelData16(0x0014)
 
-    writer.SetBase('Stick')
+    writer.SetBase("Stick")
     writer.GoTo(0x32C)
     writer.WriteModelData(Offsets.ADULT_LINK_LUT_DL_BLADEBREAK)
     writer.GoTo(0x328)
     writer.WriteModelData16(0x0014)
 
-    writer.SetBase('Code')
+    writer.SetBase("Code")
     writer.GoTo(0xE65A0)
     writer.WriteModelData(ADULT_HIERARCHY)  # Hierarchy pointer
 
@@ -787,9 +838,9 @@ def patch_model_child(rom: Rom, settings: Settings, log: CosmeticsLog) -> None:
             choices.remove("Default")
             choices.remove("Random")
             model = random.choice(choices)
-        model = data_path(f'Models/Child/{model}.zobj')
+        model = data_path(f"Models/Child/{model}.zobj")
     pathsplit = os.path.basename(model)
-    log.settings.model_child = pathsplit.split('.')[0]
+    log.settings.model_child = pathsplit.split(".")[0]
 
     # Load and process model
     dfAddress = LoadModel(rom, model, 1)
@@ -893,19 +944,19 @@ def patch_model_child(rom: Rom, settings: Settings, log: CosmeticsLog) -> None:
     writer.GoTo(0x6A812)
     writer.WriteModelDataLo(Offsets.CHILD_LINK_LUT_DL_DEKU_STICK)
 
-    writer.SetBase('Stick')
+    writer.SetBase("Stick")
     writer.GoTo(0x334)
     writer.WriteModelData(Offsets.CHILD_LINK_LUT_DL_DEKU_STICK)
     writer.GoTo(0x330)
     writer.WriteModelData16(0x0015)
 
-    writer.SetBase('Shield')
+    writer.SetBase("Shield")
     writer.GoTo(0x7EE)
     writer.WriteModelDataHi(Offsets.CHILD_LINK_LUT_DL_SHIELD_DEKU_ODD)
     writer.GoTo(0x7F2)
     writer.WriteModelDataLo(Offsets.CHILD_LINK_LUT_DL_SHIELD_DEKU_ODD)
 
-    writer.SetBase('Player')
+    writer.SetBase("Player")
     writer.GoTo(0x2253C)
     writer.SetAdvance(4)
     writer.WriteModelData(Offsets.CHILD_LINK_LUT_DL_MASK_KEATON)
@@ -917,25 +968,25 @@ def patch_model_child(rom: Rom, settings: Settings, log: CosmeticsLog) -> None:
     writer.WriteModelData(Offsets.CHILD_LINK_LUT_DL_MASK_GERUDO)
     writer.WriteModelData(Offsets.CHILD_LINK_LUT_DL_MASK_TRUTH)
 
-    writer.SetBase('GraveyardKid')
+    writer.SetBase("GraveyardKid")
     writer.GoTo(0xE62)
     writer.WriteModelDataHi(Offsets.CHILD_LINK_LUT_DL_MASK_SPOOKY)
     writer.GoTo(0xE66)
     writer.WriteModelDataLo(Offsets.CHILD_LINK_LUT_DL_MASK_SPOOKY)
 
-    writer.SetBase('Guard')
+    writer.SetBase("Guard")
     writer.GoTo(0x1EA2)
     writer.WriteModelDataHi(Offsets.CHILD_LINK_LUT_DL_MASK_KEATON)
     writer.GoTo(0x1EA6)
     writer.WriteModelDataLo(Offsets.CHILD_LINK_LUT_DL_MASK_KEATON)
 
-    writer.SetBase('RunningMan')
+    writer.SetBase("RunningMan")
     writer.GoTo(0x1142)
     writer.WriteModelDataHi(Offsets.CHILD_LINK_LUT_DL_MASK_BUNNY)
     writer.GoTo(0x1146)
     writer.WriteModelDataLo(Offsets.CHILD_LINK_LUT_DL_MASK_BUNNY)
 
-    writer.SetBase('Code')
+    writer.SetBase("Code")
     writer.GoTo(0xE65A4)
     writer.WriteModelData(CHILD_HIERARCHY)  # Hierarchy pointer
 
@@ -1116,7 +1167,10 @@ AdultPieces: dict[str, tuple[Offsets, int]] = {
     "Blade.3.Break": (Offsets.ADULT_LINK_LUT_DL_BLADEBREAK, 0x2BA38),
     "Blade.3": (Offsets.ADULT_LINK_LUT_DL_LONGSWORD_BLADE, 0x23A28),  # 0x238C8 + 0x160, skips hilt
     "Bottle": (Offsets.ADULT_LINK_LUT_DL_BOTTLE, 0x2AD58),
-    "Broken.Blade.3": (Offsets.ADULT_LINK_LUT_DL_LONGSWORD_BROKEN, 0x23EB0),  # 0x23D50 + 0x160, skips hilt
+    "Broken.Blade.3": (
+        Offsets.ADULT_LINK_LUT_DL_LONGSWORD_BROKEN,
+        0x23EB0,
+    ),  # 0x23D50 + 0x160, skips hilt
     "Foot.2.L": (Offsets.ADULT_LINK_LUT_DL_BOOT_LIRON, 0x25918),
     "Foot.2.R": (Offsets.ADULT_LINK_LUT_DL_BOOT_RIRON, 0x25A60),
     "Foot.3.L": (Offsets.ADULT_LINK_LUT_DL_BOOT_LHOVER, 0x25BA8),
@@ -1151,7 +1205,7 @@ AdultPieces: dict[str, tuple[Offsets, int]] = {
 # rather than specifying those indices here, simply have their offset in the table above
 # increased by whatever amount of starting indices would be skipped.
 adultSkips: dict[str, list[tuple[int, int]]] = {
-    "FPS.Hookshot":  [(0x2F0, 0x618)],
+    "FPS.Hookshot": [(0x2F0, 0x618)],
     "Hilt.2": [(0x1E8, 0x430)],
     "Hilt.3": [(0x160, 0x480)],
     "Blade.2": [(0xE8, 0x518)],
@@ -1193,7 +1247,10 @@ ChildPieces: dict[str, tuple[Offsets, int]] = {
     "Slingshot.String": (Offsets.CHILD_LINK_LUT_DL_SLINGSHOT_STRING, 0x221A8),
     "Sheath": (Offsets.CHILD_LINK_LUT_DL_SWORD_SHEATH, 0x15408),
     "Blade.2": (Offsets.CHILD_LINK_LUT_DL_MASTER_SWORD, 0x15698),  # 0x15540 + 0x158, skips fist
-    "Blade.1": (Offsets.CHILD_LINK_LUT_DL_SWORD_BLADE, 0x14110),  # 0x13F38 + 0x1D8, skips fist and hilt
+    "Blade.1": (
+        Offsets.CHILD_LINK_LUT_DL_SWORD_BLADE,
+        0x14110,
+    ),  # 0x13F38 + 0x1D8, skips fist and hilt
     "Boomerang": (Offsets.CHILD_LINK_LUT_DL_BOOMERANG, 0x14660),
     "Fist.L": (Offsets.CHILD_LINK_LUT_DL_LFIST, 0x13E18),
     "Fist.R": (Offsets.CHILD_LINK_LUT_DL_RFIST, 0x14320),
@@ -1203,7 +1260,10 @@ ChildPieces: dict[str, tuple[Offsets, int]] = {
     "Ocarina.1": (Offsets.CHILD_LINK_LUT_DL_OCARINA_FAIRY, 0x15BA8),
     "Bottle": (Offsets.CHILD_LINK_LUT_DL_BOTTLE, 0x18478),
     "Ocarina.2": (Offsets.CHILD_LINK_LUT_DL_OCARINA_TIME, 0x15AB8),  # 0x15958 + 0x160, skips hand
-    "Bottle.Hand.L": (Offsets.CHILD_LINK_LUT_DL_LHAND_BOTTLE, 0x18478),  # Just the bottle, couldn't find one with hand and bottle
+    "Bottle.Hand.L": (
+        Offsets.CHILD_LINK_LUT_DL_LHAND_BOTTLE,
+        0x18478,
+    ),  # Just the bottle, couldn't find one with hand and bottle
     "GoronBracelet": (Offsets.CHILD_LINK_LUT_DL_GORON_BRACELET, 0x16118),
     "Mask.Bunny": (Offsets.CHILD_LINK_LUT_DL_MASK_BUNNY, 0x2CA38),
     "Mask.Skull": (Offsets.CHILD_LINK_LUT_DL_MASK_SKULL, 0x2AD40),
@@ -1215,7 +1275,10 @@ ChildPieces: dict[str, tuple[Offsets, int]] = {
     "Mask.Zora": (Offsets.CHILD_LINK_LUT_DL_MASK_ZORA, 0x2B580),
     "FPS.Forearm.R": (Offsets.CHILD_LINK_LUT_DL_FPS_RIGHT_ARM, 0x18048),
     "DekuStick": (Offsets.CHILD_LINK_LUT_DL_DEKU_STICK, 0x6CC0),
-    "Shield.2": (Offsets.CHILD_LINK_LUT_DL_SHIELD_HYLIAN_BACK, 0x14C30),  # 0x14B40 + 0xF0, skips sheath
+    "Shield.2": (
+        Offsets.CHILD_LINK_LUT_DL_SHIELD_HYLIAN_BACK,
+        0x14C30,
+    ),  # 0x14B40 + 0xF0, skips sheath
     "Limb 1": (Offsets.CHILD_LINK_LUT_DL_WAIST, 0x202A8),
     "Limb 3": (Offsets.CHILD_LINK_LUT_DL_RTHIGH, 0x204F0),
     "Limb 4": (Offsets.CHILD_LINK_LUT_DL_RSHIN, 0x206E8),
@@ -1289,29 +1352,29 @@ oldToNewPipeline = {
 }
 
 # Misc. constants
-CODE_START: int          = 0x00A87000
-PLAYER_START: int        = 0x00BCDB70
-HOOK_START: int          = 0x00CAD2C0
-SHIELD_START: int        = 0x00DB1F40
-STICK_START: int         = 0x00EAD0F0
+CODE_START: int = 0x00A87000
+PLAYER_START: int = 0x00BCDB70
+HOOK_START: int = 0x00CAD2C0
+SHIELD_START: int = 0x00DB1F40
+STICK_START: int = 0x00EAD0F0
 GRAVEYARD_KID_START: int = 0x00E60920
-GUARD_START: int         = 0x00D1A690
-RUNNING_MAN_START: int   = 0x00E50440
+GUARD_START: int = 0x00D1A690
+RUNNING_MAN_START: int = 0x00E50440
 
-BASE_OFFSET: int         = 0x06000000
-LUT_START: int           = 0x00005000
-LUT_END: int             = 0x00005800
-PRE_CONSTANT_START: int  = 0X0000500C
+BASE_OFFSET: int = 0x06000000
+LUT_START: int = 0x00005000
+LUT_END: int = 0x00005800
+PRE_CONSTANT_START: int = 0x0000500C
 
-ADULT_START: int         = 0x00F86000
-ADULT_SIZE: int          = 0x00037800
-ADULT_HIERARCHY: int     = 0x06005380
-ADULT_POST_START: int    = 0x00005238
+ADULT_START: int = 0x00F86000
+ADULT_SIZE: int = 0x00037800
+ADULT_HIERARCHY: int = 0x06005380
+ADULT_POST_START: int = 0x00005238
 
-CHILD_START: int         = 0x00FBE000
-CHILD_SIZE: int          = 0x0002CF80
-CHILD_HIERARCHY: int     = 0x060053A8
-CHILD_POST_START: int    = 0x00005228
+CHILD_START: int = 0x00FBE000
+CHILD_SIZE: int = 0x0002CF80
+CHILD_HIERARCHY: int = 0x060053A8
+CHILD_POST_START: int = 0x00005228
 
 # Parts of the rom to not overwrite when applying a patch file
 restrictiveBytes: list[tuple[int, int]] = [

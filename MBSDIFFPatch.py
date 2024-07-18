@@ -13,25 +13,25 @@ from ntype import BigStream
 
 # Handle 3.0 website patches.
 def apply_ootr_3_web_patch(settings, rom: Rom) -> None:
-    logger = logging.getLogger('')
+    logger = logging.getLogger("")
     minibsdiff_path: str = "./" if is_bundled() else "bin/minibsdiff/"
     minibsdiff_python: bool = False
-    if platform.system() == 'Windows':
-        if platform.machine() == 'AMD64':
+    if platform.system() == "Windows":
+        if platform.machine() == "AMD64":
             minibsdiff_path += "minibsdiff.exe"
-        elif platform.machine() == 'ARM64':
+        elif platform.machine() == "ARM64":
             minibsdiff_path += "minibsdiff_ARM64.exe"
         else:
             minibsdiff_path += "minibsdiff32.exe"
-    elif platform.system() == 'Linux':
-        if platform.machine() in ('arm64', 'aarch64', 'aarch64_be', 'armv8b', 'armv8l'):
+    elif platform.system() == "Linux":
+        if platform.machine() in ("arm64", "aarch64", "aarch64_be", "armv8b", "armv8l"):
             minibsdiff_path += "minibsdiff_ARM64"
-        elif platform.machine() in ('arm', 'armv7l', 'armhf'):
+        elif platform.machine() in ("arm", "armv7l", "armhf"):
             minibsdiff_path += "minibsdiff_ARM32"
         else:
             minibsdiff_path += "minibsdiff"
-    elif platform.system() == 'Darwin':
-        if platform.machine() == 'arm64':
+    elif platform.system() == "Darwin":
+        if platform.machine() == "arm64":
             minibsdiff_path += "minibsdiff_ARM64.out"
         else:
             minibsdiff_path += "minibsdiff.out"
@@ -40,24 +40,35 @@ def apply_ootr_3_web_patch(settings, rom: Rom) -> None:
 
     if minibsdiff_python:
         # Use the (slow) python re-implementation of minibsdiff.
-        logger.info("Patching ROM using slow Python implementation of minibsdiff. This might take some time.")
+        logger.info(
+            "Patching ROM using slow Python implementation of minibsdiff. This might take some time."
+        )
         apply_minibsdiff_patch_file(rom, settings.patch_file)
     else:
         # Use the minibsdiff binary.
-        filename_split = os.path.basename(settings.patch_file).rpartition('.')
+        filename_split = os.path.basename(settings.patch_file).rpartition(".")
         output_filename_base = settings.output_file if settings.output_file else filename_split[0]
         output_dir = default_output_path(settings.output_dir)
         output_path = os.path.join(output_dir, output_filename_base)
 
         # Decompress patch file.
         decompressed_patch_file = output_path + "_decompressed.patch"
-        with gzip.open(settings.patch_file, 'rb') as stream:
-            with open(decompressed_patch_file, 'wb') as f_out:
+        with gzip.open(settings.patch_file, "rb") as stream:
+            with open(decompressed_patch_file, "wb") as f_out:
                 shutil.copyfileobj(stream, f_out)
 
         # Patch the base ROM.
         decompressed_patched_rom_file = output_path + "_patched.z64"
-        run_process(logger, [minibsdiff_path, "app", local_path('ZOOTDEC.z64'), decompressed_patch_file, decompressed_patched_rom_file])
+        run_process(
+            logger,
+            [
+                minibsdiff_path,
+                "app",
+                local_path("ZOOTDEC.z64"),
+                decompressed_patch_file,
+                decompressed_patched_rom_file,
+            ],
+        )
         os.remove(decompressed_patch_file)
 
         # Read the ROM back in and check for changes.
@@ -81,10 +92,10 @@ def apply_ootr_3_web_patch(settings, rom: Rom) -> None:
 
 # Re-implementation of https://github.com/mhinds7/minibsdiff
 def apply_minibsdiff_patch_file(rom: Rom, file: str) -> None:
-    with gzip.open(file, 'r') as stream:
+    with gzip.open(file, "r") as stream:
         patch_data: BigStream = BigStream(bytearray(stream.read()))
 
-    if patch_data.read_bytes(length=8) != b'MBSDIF43':  # minibsdiff header
+    if patch_data.read_bytes(length=8) != b"MBSDIF43":  # minibsdiff header
         raise Exception("Patch file does not have a valid header. Aborting.")
 
     ctrl_len: int = minibsdiff_read_int64(patch_data)

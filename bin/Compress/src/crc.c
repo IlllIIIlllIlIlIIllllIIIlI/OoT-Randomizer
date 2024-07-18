@@ -46,11 +46,11 @@
 
 unsigned int crc_table[256];
 
-void gen_table() 
+void gen_table()
 {
     uint32_t crc, poly;
     int32_t  i, j;
-    
+
     poly = 0xEDB88320;
     for (i = 0; i < 256; i++) {
         crc = i;
@@ -62,7 +62,7 @@ void gen_table()
     }
 }
 
-unsigned int crc32(unsigned char *data, int len) 
+unsigned int crc32(unsigned char *data, int len)
 {
     uint32_t crc, i;
 
@@ -74,7 +74,7 @@ unsigned int crc32(unsigned char *data, int len)
 }
 
 
-int N64GetCIC(unsigned char *data) 
+int N64GetCIC(unsigned char *data)
 {
     switch (crc32(&data[N64_HEADER_SIZE], N64_BC_SIZE)) {
         case 0x6170A4A1: return 6101;
@@ -87,7 +87,7 @@ int N64GetCIC(unsigned char *data)
     return 0;
 }
 
-int N64CalcCRC(unsigned int *crc, unsigned char *data) 
+int N64CalcCRC(unsigned int *crc, unsigned char *data)
 {
     int32_t bootcode, i;
     uint32_t seed, r, d;
@@ -152,7 +152,7 @@ void fix_crc (uint8_t* buffer)
     uint8_t CRC2[4];
     uint32_t crc[2];
     uint32_t i;
-    
+
     gen_table();
 
     /* If the CRC calc was successful, do stuff */
@@ -163,11 +163,11 @@ void fix_crc (uint8_t* buffer)
             CRC1[i] = (crc[0] >> (24-8*i))&0xFF;
             CRC2[i] = (crc[1] >> (24-8*i))&0xFF;
         }
-        
+
         /* If the CRC1 changed, update it */
         if(crc[0] != BYTES2LONG(&buffer[N64_CRC1]))
             memcpy(buffer + N64_CRC1, CRC1, 4);
-        
+
         /* If the CRC2 changed, update it */
         if (crc[1] != BYTES2LONG(&buffer[N64_CRC2]))
             memcpy(buffer + N64_CRC2, CRC2, 4);

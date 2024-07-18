@@ -19,10 +19,10 @@ def calculate_crc(data: BigStream) -> bytearray:
         if ((t6 + d) & u32) < t6:
             t4 += 1
 
-        t6 = (t6+d) & u32
+        t6 = (t6 + d) & u32
         t3 ^= d
         shift = d & 0x1F
-        r = ((d << shift) | (d >> (32 - shift)))
+        r = (d << shift) | (d >> (32 - shift))
         t5 += r
 
         if t2 > d:

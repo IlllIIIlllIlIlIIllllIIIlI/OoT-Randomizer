@@ -4,6 +4,6 @@ $(".spoiler-trigger").click(function() {
 });
 
 //Footer only showing if scrolled down at least 95%
-$(window).scroll(function() {              
+$(window).scroll(function() {
     ($(document).scrollTop() + $(window).height()) / $(document).height() > 0.95 ? $('#footer').fadeIn() : $('#footer').fadeOut();
 });

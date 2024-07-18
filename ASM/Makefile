@@ -23,14 +23,14 @@ RESOURCES = $(patsubst $(RESOURCEDIR)/%.bin,$(OBJDIR)/%_bin.o,$(sort $(wildcard 
 
 all: clean bundle symbols
 
-$(OBJDIR)/%.o: %.c 
+$(OBJDIR)/%.o: %.c
 	$(CC) -o $@ -c $< $(CFLAGS) $(CPPFLAGS)
 ifdef RUN_OBJDUMP
 		$(OBJDUMP) -d $@ | tr -d '\015' > $@_d.txt
 		$(OBJDUMP) -r $@ | tr -d '\015' > $@_r.txt
 endif
 
-$(OBJDIR): 
+$(OBJDIR):
 	mkdir -p $@
 
 $(OBJDIR)/%_bin.o: $(RESOURCEDIR)/%.bin

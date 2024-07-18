@@ -1,6 +1,6 @@
 # Loading custom sequences
-To load custom sequences, you need to package into a zip archive with a .ootrs extension: 
-  - A raw N64 sequence file with a `.seq` file extension 
+To load custom sequences, you need to package into a zip archive with a .ootrs extension:
+  - A raw N64 sequence file with a `.seq` file extension
   - A metadata file with a `.meta` file extension. The `.meta` file should be a plaintext file as defined below
 
 Any sub-directories in this folder will also be read from. Only .ootrs files with a minimum of a `.seq` and `.meta` are supported

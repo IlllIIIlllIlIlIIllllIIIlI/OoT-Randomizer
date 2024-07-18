@@ -7,8 +7,7 @@ if TYPE_CHECKING:
 
 
 class AccessRule(Protocol):
-    def __call__(self, state: State, **kwargs) -> bool:
-        ...
+    def __call__(self, state: State, **kwargs) -> bool: ...
 
 
 # Variable names and values used by rule execution,
@@ -16,8 +15,8 @@ class AccessRule(Protocol):
 allowed_globals: dict[str, Any] = {}
 
 
-_escape: re.Pattern[str] = re.compile(r'[\'()[\]-]')
+_escape: re.Pattern[str] = re.compile(r"[\'()[\]-]")
 
 
 def escape_name(name: str) -> str:
-    return _escape.sub('', name.replace(' ', '_'))
+    return _escape.sub("", name.replace(" ", "_"))

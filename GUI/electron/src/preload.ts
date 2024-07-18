@@ -270,7 +270,7 @@ post.on('updateDynamicSetting', function (event) {
   generator.getUpdatedDynamicSetting(pythonPath, pythonSettingsToJsonPath, data).then(res => {
     //console.log('[Preload] Success');
       post.send(window, 'updateDynamicSettingSuccess', res);
-      
+
   }).catch((err) => {
 
       if (os.platform() == "win32")

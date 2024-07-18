@@ -1,14 +1,14 @@
 ## About
 
-gzinject is a wad editing utility, primarily used for patching N64 VC Emulators, and replacing the rom inside.  gzinject uses patch files to patch content files within the wad. A description of the patch file format can be seen in the [Patch](#Patch) section.  
+gzinject is a wad editing utility, primarily used for patching N64 VC Emulators, and replacing the rom inside.  gzinject uses patch files to patch content files within the wad. A description of the patch file format can be seen in the [Patch](#Patch) section.
 
-## Executable 
+## Executable
 
 To build your own, run ./configure, then make, and make install. See BUILDING for more instructions
 
 Prebuilt Windows executable is contained under releases (https://github.com/krimtonz/gzinject/releases/latest)
 
-## Usage 
+## Usage
 ```
 Usage:
   gzinject -a extract -w SOURCEWAD [options]

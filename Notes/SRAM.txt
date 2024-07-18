@@ -1,7 +1,7 @@
-In order to save the additional flag data required with the introduction of pot/crate shuffle, 
-the game's SRAM system has been modified. 
+In order to save the additional flag data required with the introduction of pot/crate shuffle,
+the game's SRAM system has been modified.
 
-The unused SRAM for slot 3 and it's backup have been reallocated between slots 1 and 2 
+The unused SRAM for slot 3 and it's backup have been reallocated between slots 1 and 2
 such that these slots now take up the entirety of the 0x8000 SRAM (less the header) for a slot size of 0x1FF8.
 This frees up an additional 0xBA8 bytes per slot to be used for additional things like the potsanity flags.
 
@@ -32,25 +32,25 @@ Slot 2 Backup
 
 SRAM slots are organized as follows:
 
-----------------    
+----------------
                     0x0000
 Vanilla Save data
                     0x144F
-----------------      
+----------------
                     0x1450
 Extended save context. Currently unused but wait for silver rupee shuffle :)
 
                     0x1FF7 - (4 * (num_override_flags + num_drop_override_flags))
 ----------------
                     0x1FF8 - (4 * (num_override_flags + num_drop_override_flags))
-Collectible Override 
+Collectible Override
 Flags
                     0x1FF7 - (4 * num_drop_override_flags)
-----------------    
+----------------
                     0x1FF8 - (4 * num_drop_override_flags)
 Dropped Collectible
-Override Flags      
+Override Flags
                     0x1FF7
-----------------       
+----------------
 
 where num_override_flags/num_drop_override_flags are the number of 32-bit flag entries in the new flag tables.

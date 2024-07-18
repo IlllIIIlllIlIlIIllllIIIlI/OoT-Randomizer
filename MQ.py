@@ -55,7 +55,9 @@ SCENE_TABLE: int = 0xB71440
 
 
 class File:
-    def __init__(self, name: str, start: int = 0, end: Optional[int] = None, remap: Optional[int] = None) -> None:
+    def __init__(
+        self, name: str, start: int = 0, end: Optional[int] = None, remap: Optional[int] = None
+    ) -> None:
         self.name: str = name
         self.start: int = start
         self.end: int = end if end is not None else self.start
@@ -68,10 +70,10 @@ class File:
     @classmethod
     def from_json(cls, file: dict[str, Optional[str]]) -> File:
         return cls(
-            file['Name'],
-            int(file['Start'], 16) if file.get('Start', None) is not None else 0,
-            int(file['End'], 16) if file.get('End', None) is not None else None,
-            int(file['RemapStart'], 16) if file.get('RemapStart', None) is not None else None
+            file["Name"],
+            int(file["Start"], 16) if file.get("Start", None) is not None else 0,
+            int(file["End"], 16) if file.get("End", None) is not None else None,
+            int(file["RemapStart"], 16) if file.get("RemapStart", None) is not None else None,
         )
 
     def __repr__(self) -> str:
@@ -89,7 +91,7 @@ class File:
         offset = new_start - self.start
         new_end = self.end + offset
 
-        rom.buffer[new_start:new_end] = rom.buffer[self.start:self.end]
+        rom.buffer[new_start:new_end] = rom.buffer[self.start : self.end]
         self.start = new_start
         self.end = new_end
         update_dmadata(rom, self)
@@ -115,10 +117,10 @@ class CollisionMesh:
 
 class ColDelta:
     def __init__(self, delta: dict[str, bool | list[dict[str, int]]]) -> None:
-        self.is_larger: bool = delta['IsLarger']
-        self.polys: list[dict[str, int]] = delta['Polys']
-        self.polytypes: list[dict[str, int]] = delta['PolyTypes']
-        self.cams: list[dict[str, int]] = delta['Cams']
+        self.is_larger: bool = delta["IsLarger"]
+        self.polys: list[dict[str, int]] = delta["Polys"]
+        self.polytypes: list[dict[str, int]] = delta["PolyTypes"]
+        self.cams: list[dict[str, int]] = delta["Cams"]
 
 
 class Icon:
@@ -129,7 +131,7 @@ class Icon:
 
     def write_to_minimap(self, rom: Rom, addr: int) -> None:
         rom.write_sbyte(addr, self.icon)
-        rom.write_byte(addr + 1,  self.count)
+        rom.write_byte(addr + 1, self.count)
         cur = 2
         for p in self.points:
             p.write_to_minimap(rom, addr + cur)
@@ -153,8 +155,8 @@ class IconPoint:
 
     def write_to_minimap(self, rom: Rom, addr: int) -> None:
         rom.write_sbyte(addr, self.flag)
-        rom.write_byte(addr+1, self.x)
-        rom.write_byte(addr+2, self.y)
+        rom.write_byte(addr + 1, self.x)
+        rom.write_byte(addr + 2, self.y)
 
     def write_to_floormap(self, rom: Rom, addr: int) -> None:
         rom.write_int16(addr, self.flag)
@@ -164,17 +166,21 @@ class IconPoint:
 
 class Scene:
     def __init__(self, scene: dict[str, Any]) -> None:
-        self.file: File = File.from_json(scene['File'])
-        self.id: int = scene['Id']
-        self.transition_actors: list[list[int]] = [convert_actor_data(x) for x in scene['TActors']]
-        self.rooms: list[Room] = [Room(x) for x in scene['Rooms']]
+        self.file: File = File.from_json(scene["File"])
+        self.id: int = scene["Id"]
+        self.transition_actors: list[list[int]] = [convert_actor_data(x) for x in scene["TActors"]]
+        self.rooms: list[Room] = [Room(x) for x in scene["Rooms"]]
         self.paths: list[list[list[int]]] = []
         self.coldelta: ColDelta = ColDelta(scene["ColDelta"])
-        self.minimaps: list[list[Icon]] = [[Icon(icon) for icon in minimap['Icons']] for minimap in scene['Minimaps']]
-        self.floormaps: list[list[Icon]] = [[Icon(icon) for icon in floormap['Icons']] for floormap in scene['Floormaps']]
-        temp_paths = scene['Paths']
+        self.minimaps: list[list[Icon]] = [
+            [Icon(icon) for icon in minimap["Icons"]] for minimap in scene["Minimaps"]
+        ]
+        self.floormaps: list[list[Icon]] = [
+            [Icon(icon) for icon in floormap["Icons"]] for floormap in scene["Floormaps"]
+        ]
+        temp_paths = scene["Paths"]
         for item in temp_paths:
-            self.paths.append(item['Points'])
+            self.paths.append(item["Points"])
 
     def write_data(self, rom: Rom) -> None:
         # write floormap and minimap data
@@ -274,8 +280,8 @@ class Scene:
 
         # build final camera data
         for cam in self.coldelta.cams:
-            data = cam['Data']
-            pos = cam['PositionIndex']
+            data = cam["Data"]
+            pos = cam["PositionIndex"]
             if pos < 0:
                 final_cams.append((data, 0))
             else:
@@ -307,25 +313,25 @@ class Scene:
             b_start = self.file.start + (types_move_addr & 0xFFFFFF)
             size = mesh.polytypes * 8
 
-            rom.buffer[b_start:b_start + size] = rom.buffer[a_start:a_start + size]
+            rom.buffer[b_start : b_start + size] = rom.buffer[a_start : a_start + size]
             mesh.polytypes_addr = types_move_addr
 
         # patch polytypes
         for item in self.coldelta.polytypes:
-            id = item['Id']
-            high = item['High']
-            low = item['Low']
+            id = item["Id"]
+            high = item["High"]
+            low = item["Low"]
             addr = self.file.start + (mesh.polytypes_addr & 0xFFFFFF) + (id * 8)
             rom.write_int32s(addr, [high, low])
 
         # patch poly data
         for item in self.coldelta.polys:
-            id = item['Id']
-            t = item['Type']
-            flags = item['Flags']
+            id = item["Id"]
+            t = item["Type"]
+            flags = item["Flags"]
 
             addr = self.file.start + (mesh.poly_addr & 0xFFFFFF) + (id * 0x10)
-            vert_bit =  rom.read_byte(addr + 0x02) & 0x1F  # VertexA id data
+            vert_bit = rom.read_byte(addr + 0x02) & 0x1F  # VertexA id data
             rom.write_int16(addr, t)
             rom.write_byte(addr + 0x02, (flags << 5) + vert_bit)
 
@@ -369,10 +375,10 @@ class Scene:
 
 class Room:
     def __init__(self, room: dict[str, int | list[str] | dict[str, Optional[str]]]):
-        self.file: File = File.from_json(room['File'])
-        self.id: int = room['Id']
-        self.objects: list[int] = [int(x, 16) for x in room['Objects']]
-        self.actors: list[list[int]] = [convert_actor_data(x) for x in room['Actors']]
+        self.file: File = File.from_json(room["File"])
+        self.id: int = room["Id"]
+        self.objects: list[int] = [int(x, 16) for x in room["Objects"]]
+        self.actors: list[list[int]] = [convert_actor_data(x) for x in room["Actors"]]
 
     def write_data(self, rom: Rom) -> None:
         # move file to remap address
@@ -386,7 +392,7 @@ class Room:
         while loop != 0 and code != 0x14:  # terminator
             loop -= 1
 
-            if code == 0x01: # actors
+            if code == 0x01:  # actors
                 offset = self.file.end - self.file.start
                 write_actor_data(rom, self.file.end, self.actors)
                 self.file.end += len(self.actors) * 0x10
@@ -394,7 +400,7 @@ class Room:
                 rom.write_byte(headcur + 1, len(self.actors))
                 rom.write_int32(headcur + 4, get_segment_address(3, offset))
 
-            elif code == 0x0B: # objects
+            elif code == 0x0B:  # objects
                 offset = self.append_object_data(rom, self.objects)
 
                 rom.write_byte(headcur + 1, len(self.objects))
@@ -428,14 +434,14 @@ def patch_files(rom: Rom, mq_scenes: list[int]) -> None:
 
 
 def get_json() -> Any:
-    with open(data_path('mqu.json'), 'r') as stream:
+    with open(data_path("mqu.json"), "r") as stream:
         data = json.load(stream)
     return data
 
 
 def convert_actor_data(string: str) -> list[int]:
     spawn_args = string.split(" ")
-    return [ int(x,16) for x in spawn_args ]
+    return [int(x, 16) for x in spawn_args]
 
 
 def get_segment_address(base: int, offset: int) -> int:
@@ -479,7 +485,9 @@ def patch_spirit_temple_mq_room_6(rom: Rom, room_addr: int) -> None:
     # write alternate header data
     # the first 3 words are mandatory. the last 3 are just to make the binary
     # cleaner to read
-    rom.write_int32s(room_addr + alt_data_off, [0, get_segment_address(3, alt_header_off), 0, 0, 0, 0])
+    rom.write_int32s(
+        room_addr + alt_data_off, [0, get_segment_address(3, alt_header_off), 0, 0, 0, 0]
+    )
 
     # clone header
     a_start = room_addr
@@ -494,11 +502,11 @@ def patch_spirit_temple_mq_room_6(rom: Rom, room_addr: int) -> None:
     cmd_addr = room_addr + cmd_actors_offset
     actor_list_addr += 0x10
     actors = rom.read_byte(cmd_addr + 1)
-    rom.write_byte(cmd_addr+1, actors - 1)
+    rom.write_byte(cmd_addr + 1, actors - 1)
     rom.write_int32(cmd_addr + 4, actor_list_addr)
 
     # move header
-    rom.buffer[a_start + 8:a_end + 8] = rom.buffer[a_start:a_end]
+    rom.buffer[a_start + 8 : a_end + 8] = rom.buffer[a_start:a_end]
 
     # write alternate header command
     seg = get_segment_address(3, alt_data_off)
@@ -511,6 +519,7 @@ def verify_remap(scenes: list[Scene]) -> None:
             if file.start < file.remap:
                 return False
         return True
+
     print("test code: verify remap won't corrupt data")
 
     for scene in scenes:
@@ -553,7 +562,9 @@ def align16(value: int) -> int:
 # The section size is expanded
 # Every relocation entry in the section after the offset is moved accordingly
 # Every relocation value that is after the inserted space is increased accordingly
-def insert_space(rom: Rom, file: File, vram_start: int, insert_section: int, insert_offset: int, insert_size: int) -> None:
+def insert_space(
+    rom: Rom, file: File, vram_start: int, insert_section: int, insert_offset: int, insert_size: int
+) -> None:
     sections = []
     val_hi = {}
     adr_hi = {}
@@ -594,10 +605,7 @@ def insert_space(rom: Rom, file: File, vram_start: int, insert_section: int, ins
         # move relocation if section is increased and it's after the insert
         if insert_section == section and offset >= insert_offset:
             # rebuild new relocation entry
-            rom.write_int32(cur,
-                ((section + 1) << 30) |
-                (type << 24) |
-                (offset + insert_size))
+            rom.write_int32(cur, ((section + 1) << 30) | (type << 24) | (offset + insert_size))
 
         # value contains the vram address
         value = rom.read_int32(address)
@@ -619,7 +627,7 @@ def insert_space(rom: Rom, file: File, vram_start: int, insert_section: int, ins
             # Load Low: Lower half of the address load
             reg = (value >> 21) & 0x1F
             val_low = value & 0x0000FFFF
-            val_low = unpack('h', pack('H', val_low))[0]
+            val_low = unpack("h", pack("H", val_low))[0]
             # combine with previous load high
             value = val_hi[reg] + val_low
         else:
@@ -657,8 +665,10 @@ def insert_space(rom: Rom, file: File, vram_start: int, insert_section: int, ins
         cur += 4
 
     # Move rom bytes
-    rom.buffer[(insert_rom + insert_size):(file.end + insert_size)] = rom.buffer[insert_rom:file.end]
-    rom.buffer[insert_rom:(insert_rom + insert_size)] = [0] * insert_size
+    rom.buffer[(insert_rom + insert_size) : (file.end + insert_size)] = rom.buffer[
+        insert_rom : file.end
+    ]
+    rom.buffer[insert_rom : (insert_rom + insert_size)] = [0] * insert_size
     file.end += insert_size
 
 
@@ -693,12 +703,12 @@ def add_relocations(rom: Rom, file: File, addresses: list[int | tuple[int, int]]
             # Otherwise, try to infer type from value
             value = rom.read_int32(address)
             op = value >> 26
-            type = 2 # default: data
-            if op == 0x02 or op == 0x03: # j or jal
+            type = 2  # default: data
+            if op == 0x02 or op == 0x03:  # j or jal
                 type = 4
-            elif op == 0x0F: # lui
+            elif op == 0x0F:  # lui
                 type = 5
-            elif op == 0x08: # addi
+            elif op == 0x08:  # addi
                 type = 6
 
         # Calculate section and offset
@@ -712,13 +722,11 @@ def add_relocations(rom: Rom, file: File, addresses: list[int | tuple[int, int]]
         offset = address - sections[section - 1]
 
         # generate relocation entry
-        relocations.append((section << 30)
-                        | (type << 24)
-                        | (offset & 0x00FFFFFF))
+        relocations.append((section << 30) | (type << 24) | (offset & 0x00FFFFFF))
 
     # Rebuild Relocation Table
     cur = header + 0x10
-    relocations.sort(key = lambda val: val & 0xC0FFFFFF)
+    relocations.sort(key=lambda val: val & 0xC0FFFFFF)
     rom.write_int32(cur, len(relocations))
     cur += 4
     for relocation in relocations:
@@ -732,4 +740,4 @@ def add_relocations(rom: Rom, file: File, addresses: list[int | tuple[int, int]]
     # Update Header and File size
     new_header_size = (cur + 4) - header
     rom.write_int32(cur, new_header_size)
-    file.end += (new_header_size - header_size)
+    file.end += new_header_size - header_size

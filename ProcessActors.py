@@ -1,46 +1,55 @@
-from Rom import *
+from Rom import Rom
+
 
 def get_actor_list(rom, actor_func):
     actors = {}
-    #scene_table = 0x00B71440
-    scene_table = 0x00BA0BB0 # for MQ
+    # scene_table = 0x00B71440
+    scene_table = 0x00BA0BB0  # for MQ
     for scene in range(0x00, 0x65):
         scene_data = rom.read_int32(scene_table + (scene * 0x14))
         actors.update(scene_get_actors(rom, actor_func, scene_data, scene))
     return actors
 
+
 def scene_get_actors(rom, actor_func, scene_data, scene, alternate=None, setup_num=0):
     actors = {}
     scene_start = alternate if alternate else scene_data
     command = 0
-    while command != 0x14: # 0x14 = end header
+    while command != 0x14:  # 0x14 = end header
         command = rom.read_byte(scene_data)
-        if command == 0x04: #room list
+        if command == 0x04:  # room list
             room_count = rom.read_byte(scene_data + 1)
             room_list = scene_start + (rom.read_int32(scene_data + 4) & 0x00FFFFFF)
             for room_id in range(0, room_count):
                 room_data = rom.read_int32(room_list)
-                actors.update(room_get_actors(rom, actor_func, room_data, scene, room_id, setup_num))
+                actors.update(
+                    room_get_actors(rom, actor_func, room_data, scene, room_id, setup_num)
+                )
                 room_list = room_list + 8
-        if command == 0x18: # Alternate header list
+        if command == 0x18:  # Alternate header list
             header_list = scene_start + (rom.read_int32(scene_data + 4) & 0x00FFFFFF)
             for alt_id in range(0, 3):
                 alt_header_addr = rom.read_int32(header_list) & 0x00FFFFFF
                 if alt_header_addr != 0 and not alternate:
                     header_data = scene_start + alt_header_addr
-                    actors.update(scene_get_actors(rom, actor_func, header_data, scene, scene_start, alt_id+1))
+                    actors.update(
+                        scene_get_actors(
+                            rom, actor_func, header_data, scene, scene_start, alt_id + 1
+                        )
+                    )
                 header_list = header_list + 4
 
         scene_data = scene_data + 8
     return actors
 
+
 def room_get_actors(rom, actor_func, room_data, scene, room_id, setup_num, alternate=None):
     actors = {}
     room_start = alternate if alternate else room_data
     command = 0
-    while command != 0x14: # 0x14 = end header
+    while command != 0x14:  # 0x14 = end header
         command = rom.read_byte(room_data)
-        if command == 0x01: # actor list
+        if command == 0x01:  # actor list
             actor_count = rom.read_byte(room_data + 1)
             actor_list = room_start + (rom.read_int32(room_data + 4) & 0x00FFFFFF)
             for _ in range(0, actor_count):
@@ -49,68 +58,126 @@ def room_get_actors(rom, actor_func, room_data, scene, room_id, setup_num, alter
                 if entry:
                     actors[actor_list] = entry
                 actor_list = actor_list + 16
-        if command == 0x18: # Alternate header list
+        if command == 0x18:  # Alternate header list
             header_list = room_start + (rom.read_int32(room_data + 4) & 0x00FFFFFF)
             for alt_id in range(0, 3):
                 alt_header_addr = rom.read_int32(header_list) & 0x00FFFFFF
                 if alt_header_addr != 0 and not alternate and setup_num == alt_id + 1:
                     header_data = room_start + alt_header_addr
-                    actors.update(room_get_actors(rom, actor_func, header_data, scene,room_id, alt_id+1, room_start))
+                    actors.update(
+                        room_get_actors(
+                            rom, actor_func, header_data, scene, room_id, alt_id + 1, room_start
+                        )
+                    )
                 header_list = header_list + 4
         room_data = room_data + 8
     return actors
 
+
 def get_wonderitems(rom):
     def get_wonderitems_func(rom, actor_id, actor, scene, room_id, setup_num, actor_num):
         if actor_id == 0x112:
-            return scene, room_id, setup_num, actor_num, scenes[scene], process_wonderitem(rom.read_bytes(actor, 16))
+            return (
+                scene,
+                room_id,
+                setup_num,
+                actor_num,
+                scenes[scene],
+                process_wonderitem(rom.read_bytes(actor, 16)),
+            )
 
     return get_actor_list(rom, get_wonderitems_func)
+
 
 def get_pots(rom):
     def get_pot_func(rom, actor_id, actor, scene, room_id, setup_num, actor_num):
         if actor_id == 0x111:
-            return scene, room_id, setup_num, actor_num, scenes[scene], process_pot(rom.read_bytes(actor, 16))
+            return (
+                scene,
+                room_id,
+                setup_num,
+                actor_num,
+                scenes[scene],
+                process_pot(rom.read_bytes(actor, 16)),
+            )
+
     return get_actor_list(rom, get_pot_func)
+
 
 def get_crates(rom):
     def get_crate_func(rom, actor_id, actor, scene, room_id, setup_num, actor_num):
         if actor_id == 0x01A0:
-            return scene, room_id, setup_num, actor_num, scenes[scene], process_crate(rom.read_bytes(actor, 16))
+            return (
+                scene,
+                room_id,
+                setup_num,
+                actor_num,
+                scenes[scene],
+                process_crate(rom.read_bytes(actor, 16)),
+            )
+
     return get_actor_list(rom, get_crate_func)
+
 
 def get_small_crates(rom):
     def get_smallcrate_func(rom, actor_id, actor, scene, room_id, setup_num, actor_num):
         if actor_id == 0x0110:
-            return scene, room_id, setup_num, actor_num, scenes[scene], process_small_crate(rom.read_bytes(actor, 16))
+            return (
+                scene,
+                room_id,
+                setup_num,
+                actor_num,
+                scenes[scene],
+                process_small_crate(rom.read_bytes(actor, 16)),
+            )
+
     return get_actor_list(rom, get_smallcrate_func)
 
+
 def get_flying_pots(rom):
-    def get_flyingpot_func(rom, actor_id, actor,scene,room_id,setup_num,actor_num):
+    def get_flyingpot_func(rom, actor_id, actor, scene, room_id, setup_num, actor_num):
         if actor_id == 0x11D:
-            pot = (scene, room_id, setup_num, actor_num, scenes[scene], process_flying_pot(rom.read_bytes(actor, 16)))
+            pot = (
+                scene,
+                room_id,
+                setup_num,
+                actor_num,
+                scenes[scene],
+                process_flying_pot(rom.read_bytes(actor, 16)),
+            )
             return pot
+
     return get_actor_list(rom, get_flyingpot_func)
+
 
 def get_empty_and_fairy_pots(rom):
     def get_pot_func(rom, actor_id, actor, scene, room_id, setup_num, actor_num):
         if actor_id == 0x111:
-            pot = (scene, room_id, setup_num, actor_num, scenes[scene], process_pot(rom.read_bytes(actor, 16)))
-            if pot[5]['item_id'] == "Empty" or pot[5]['item_id'] == "Flexible (Fairy)":
+            pot = (
+                scene,
+                room_id,
+                setup_num,
+                actor_num,
+                scenes[scene],
+                process_pot(rom.read_bytes(actor, 16)),
+            )
+            if pot[5]["item_id"] == "Empty" or pot[5]["item_id"] == "Flexible (Fairy)":
                 return pot
+
     return get_actor_list(rom, get_pot_func)
 
+
 wondertypes = [
-    'MULTITAG_FREE',
-    'TAG_POINT_FREE',
-    'PROXIMITY_DROP',
-    'INTERACT_SWITCH',
-    'UNUSED',
-    'MULTITAG_ORDERED',
-    'TAG_POINT_ORDERED',
-    'PROXIMITY_SWITCH',
-    'BOMB_SOLDIER',
-    'ROLL_DROP',
+    "MULTITAG_FREE",
+    "TAG_POINT_FREE",
+    "PROXIMITY_DROP",
+    "INTERACT_SWITCH",
+    "UNUSED",
+    "MULTITAG_ORDERED",
+    "TAG_POINT_ORDERED",
+    "PROXIMITY_SWITCH",
+    "BOMB_SOLDIER",
+    "ROLL_DROP",
 ]
 
 scenes = [
@@ -215,43 +282,54 @@ scenes = [
     "Spot 18 - Goron City",
     "Spot 20 - Lon Lon Ranch",
     "Ganon's Castle Exterior",
-
 ]
 
 dropTable = [
-    'NUTS', 'HEART_PIECE', 'MAGIC_LARGE', 'MAGIC_SMALL',
-    'HEART', 'ARROWS_SMALL', 'ARROWS_MEDIUM', 'ARROWS_LARGE',
-    'RUPEE_GREEN', 'RUPEE_BLUE', 'RUPEE_RED', 'FLEXIBLE',
+    "NUTS",
+    "HEART_PIECE",
+    "MAGIC_LARGE",
+    "MAGIC_SMALL",
+    "HEART",
+    "ARROWS_SMALL",
+    "ARROWS_MEDIUM",
+    "ARROWS_LARGE",
+    "RUPEE_GREEN",
+    "RUPEE_BLUE",
+    "RUPEE_RED",
+    "FLEXIBLE",
 ]
+
 
 def process_wonderitem(actor_bytes):
     variable = (actor_bytes[14] << 8) + actor_bytes[15]
     type = (variable >> 0xB) & 0x1F
-    drop = ((variable >> 6) & 0x1F)
+    drop = (variable >> 6) & 0x1F
     if drop < 12:
         drop = dropTable[drop]
     else:
-        drop = f'Random {drop}'
+        drop = f"Random {drop}"
 
     damage_type = None
-    if type == 3: # Interact Switch, get damage type
+    if type == 3:  # Interact Switch, get damage type
         damage_type = (actor_bytes[12] << 8) + actor_bytes[13]
     return {
-        'type':type,
-        'type_string':wondertypes[type],
-        'drop': drop,
-        'damage_type': damage_type,
+        "type": type,
+        "type_string": wondertypes[type],
+        "drop": drop,
+        "damage_type": damage_type,
     }
+
 
 def process_flying_pot(actor_bytes):
     variable = (actor_bytes[14] << 8) + actor_bytes[15]
     drop = (variable & 0xFF00) >> 8
-    flag = (variable & 0x003F)
+    flag = variable & 0x003F
     return {
-        'variable': hex(variable),
-        'drop': hex(drop),
-        'flag': hex(flag),
+        "variable": hex(variable),
+        "drop": hex(drop),
+        "flag": hex(flag),
     }
+
 
 def process_small_crate(actor_bytes):
     variable = (actor_bytes[14] << 8) + actor_bytes[15]
@@ -282,14 +360,16 @@ def process_small_crate(actor_bytes):
     if item_id not in item_dict.keys():
         item_id = None
     return {
-        'variable': hex(variable),
-        'item_id': item_dict[item_id],
+        "variable": hex(variable),
+        "item_id": item_dict[item_id],
     }
+
+
 def process_crate(actor_bytes):
     variable = (actor_bytes[14] << 8) + actor_bytes[15]
     rx = (actor_bytes[8] << 8) + actor_bytes[9]
     # for crates, item dropped iz in Rx
-    item_id = (rx & 0xFF)
+    item_id = rx & 0xFF
     item_dict = {
         0x00: "Green Rupee",
         0x01: "Blue Rupee",
@@ -318,14 +398,15 @@ def process_crate(actor_bytes):
         item_id = None
 
     actor_dict = {
-        'variable': hex(variable),
-        'rx': hex(rx),
-        'item_id': item_dict[item_id],
-        'skulltula': (variable & 0x8000) == 0,
+        "variable": hex(variable),
+        "rx": hex(rx),
+        "item_id": item_dict[item_id],
+        "skulltula": (variable & 0x8000) == 0,
     }
-    if actor_dict['skulltula']:
-        actor_dict['skulltula_flag'] = variable & 0xFF
+    if actor_dict["skulltula"]:
+        actor_dict["skulltula_flag"] = variable & 0xFF
     return actor_dict
+
 
 def process_pot(actor_bytes):
     variable = (actor_bytes[14] << 8) + actor_bytes[15]
@@ -356,19 +437,20 @@ def process_pot(actor_bytes):
     if item_id not in item_dict.keys():
         item_id = None
     return {
-        'variable': hex(variable),
-        'item_id': item_dict[item_id],
+        "variable": hex(variable),
+        "item_id": item_dict[item_id],
     }
 
-#rom = Rom('ZOOTDEC.z64')
-rom = Rom('zeloot_mqdebug.z64')
+
+# rom = Rom('ZOOTDEC.z64')
+rom = Rom("zeloot_mqdebug.z64")
 pots = get_crates(rom)
 
 for pot in pots:
-    print(f'{pot}: {pots[pot]}')
+    print(f"{pot}: {pots[pot]}")
 
-#rom = Rom('../zeloot_mqdebug.z64')
-#wonderitems = get_wonderitems(rom)
+# rom = Rom('../zeloot_mqdebug.z64')
+# wonderitems = get_wonderitems(rom)
 
-#for wonderitem in wonderitems:
-    #print(f'{wonderitem}: {wonderitems[wonderitem]}')
+# for wonderitem in wonderitems:
+# print(f'{wonderitem}: {wonderitems[wonderitem]}')

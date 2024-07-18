@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 
 class Entrance:
-    def __init__(self, name: str = '', parent: Optional[Region] = None) -> None:
+    def __init__(self, name: str = "", parent: Optional[Region] = None) -> None:
         self.name: str = name
         self.parent_region: Optional[Region] = parent
         self.world: Optional[World] = parent.world if parent is not None else None
@@ -52,7 +52,9 @@ class Entrance:
         if self.never:
             return
         self.access_rules.append(lambda_rule)
-        self.access_rule = lambda state, **kwargs: all(rule(state, **kwargs) for rule in self.access_rules)
+        self.access_rule = lambda state, **kwargs: all(
+            rule(state, **kwargs) for rule in self.access_rules
+        )
 
     def set_rule(self, lambda_rule: AccessRule) -> None:
         self.access_rule = lambda_rule
@@ -64,7 +66,9 @@ class Entrance:
 
     def disconnect(self) -> Optional[Region]:
         if self.connected_region is None:
-            raise Exception(f"`disconnect()` called without a valid `connected_region` for entrance {self.name}.")
+            raise Exception(
+                f"`disconnect()` called without a valid `connected_region` for entrance {self.name}."
+            )
         try:
             self.connected_region.entrances.remove(self)
         except ValueError as e:
@@ -79,11 +83,15 @@ class Entrance:
 
     def get_new_target(self) -> Entrance:
         if self.world is None:
-            raise Exception(f"`get_new_target()` called without a valid `world` for entrance {self.name}.")
+            raise Exception(
+                f"`get_new_target()` called without a valid `world` for entrance {self.name}."
+            )
         if self.connected_region is None:
-            raise Exception(f"`get_new_target()` called without a valid `connected_region` for entrance {self.name}.")
-        root = self.world.get_region('Root Exits')
-        target_entrance = Entrance('Root -> ' + self.connected_region.name, root)
+            raise Exception(
+                f"`get_new_target()` called without a valid `connected_region` for entrance {self.name}."
+            )
+        root = self.world.get_region("Root Exits")
+        target_entrance = Entrance("Root -> " + self.connected_region.name, root)
         target_entrance.connect(self.connected_region)
         target_entrance.replaces = self
         root.exits.append(target_entrance)

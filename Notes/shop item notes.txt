@@ -2483,4 +2483,4 @@ ext_func_0x721cc: ; add money
 0x00000018: addu t7, t6, a0
 0x0000001c: sh t7, 0x13cc(v0)
 0x00000020: jr ra
-0x00000024: nop 
+0x00000024: nop

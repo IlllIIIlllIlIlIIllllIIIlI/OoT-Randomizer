@@ -12,5 +12,3 @@ a3 = 0803A150 change to actual FFFC offset, modify segment to 07 if in EN file
 t6 = 08000000 change to 07000000 if FFFC in EN file
 t7 = 0803A340 change to actual FFFD offset, modify segment to 07 if in EN file (used for FFFC length)
 t8 = 008EB000 change to 0092D000 for start of file pointer
-
-

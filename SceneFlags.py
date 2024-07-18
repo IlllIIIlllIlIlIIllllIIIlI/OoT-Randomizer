@@ -6,14 +6,30 @@ if TYPE_CHECKING:
     from Location import Location
     from World import World
 
+
 # Loop through all of the locations in the world. Extract ones that use our flag system to start building our xflag tables
-def build_xflags_from_world(world: World) ->  tuple[dict[int, dict[tuple[int, int], list[tuple[int, int]]]], list[tuple[Location, tuple[int, int, int, int], tuple[int, int, int, int]]]]:
+def build_xflags_from_world(
+    world: World,
+) -> tuple[
+    dict[int, dict[tuple[int, int], list[tuple[int, int]]]],
+    list[tuple[Location, tuple[int, int, int, int], tuple[int, int, int, int]]],
+]:
     scene_flags = {}
     alt_list = []
     for i in range(0, 101):
         scene_flags[i] = {}
         for location in world.get_locations():
-            if location.scene == i and location.type in ["Freestanding", "Pot", "FlyingPot", "Crate", "SmallCrate", "Beehive", "RupeeTower", "SilverRupee", "Wonderitem"]:
+            if location.scene == i and location.type in [
+                "Freestanding",
+                "Pot",
+                "FlyingPot",
+                "Crate",
+                "SmallCrate",
+                "Beehive",
+                "RupeeTower",
+                "SilverRupee",
+                "Wonderitem",
+            ]:
                 default = location.default
                 if isinstance(default, list):  # List of alternative room/setup/flag to use
                     primary_tuple = default[0]
@@ -36,7 +52,7 @@ def build_xflags_from_world(world: World) ->  tuple[dict[int, dict[tuple[int, in
                     elif len(default) == 4:
                         room, setup, flag, subflag = default
                     room_setup = (setup, room)
-                    if not room_setup in scene_flags[i].keys():
+                    if room_setup not in scene_flags[i].keys():
                         scene_flags[i][room_setup] = []
                     scene_flags[i][room_setup].append((flag, subflag))
 
@@ -44,8 +60,11 @@ def build_xflags_from_world(world: World) ->  tuple[dict[int, dict[tuple[int, in
             del scene_flags[i]
     return scene_flags, alt_list
 
+
 # Take the data from build_xflags_from_world and create the actual tables that will be stored in the ROM
-def build_xflag_tables(xflags: dict[int, dict[tuple[int,int], list[tuple[int,int]]]]) -> tuple[bytearray, bytearray, bytearray, int]:
+def build_xflag_tables(
+    xflags: dict[int, dict[tuple[int, int], list[tuple[int, int]]]],
+) -> tuple[bytearray, bytearray, bytearray, int]:
     scene_table = bytearray([0xFF] * 202)
     room_table = bytearray(0)
     room_blob = bytearray(0)
@@ -53,8 +72,8 @@ def build_xflag_tables(xflags: dict[int, dict[tuple[int,int], list[tuple[int,int
     for scene in xflags.keys():
         num_room_setups = len(xflags[scene].keys())
         room_table_offset = len(room_table)
-        scene_table[scene*2] = (room_table_offset & 0xFF00) >> 8
-        scene_table[scene*2 + 1] = (room_table_offset & 0x00FF)
+        scene_table[scene * 2] = (room_table_offset & 0xFF00) >> 8
+        scene_table[scene * 2 + 1] = room_table_offset & 0x00FF
         room_table.append(num_room_setups)
         for setup, room in xflags[scene].keys():
             if scene == 0x3E:
@@ -63,7 +82,7 @@ def build_xflag_tables(xflags: dict[int, dict[tuple[int,int], list[tuple[int,int
                 room_setup = bytearray([(setup << 6) + room])
             if scene == 98:
                 pass
-            room_xflags, room_bits = build_room_xflags(xflags[scene][(setup,room)])
+            room_xflags, room_bits = build_room_xflags(xflags[scene][(setup, room)])
             diff_flags, rlc_flags = encode_room_xflags(room_xflags)
             room_table.extend(room_setup)
             room_blob_offset = len(room_blob)
@@ -75,6 +94,7 @@ def build_xflag_tables(xflags: dict[int, dict[tuple[int,int], list[tuple[int,int
             room_blob.extend(bytearray(rlc_flags))
             bits += room_bits
     return scene_table, room_table, room_blob, bits
+
 
 # Create a 256 byte array representing each actor in the room. Each value in the array is the bit index that will be used for that actor, accounting for sub_ids
 # room_locations - list of location (actor_id, sub_id) in the room
@@ -88,11 +108,12 @@ def build_room_xflags(room_locations):
     room_xflags2 = [0] * 256
     last = 1
     for i in range(0, 256):
-        if(room_xflags[i] != 0):
+        if room_xflags[i] != 0:
             room_xflags2[i] = last
             last = room_xflags[i]
         bits += room_xflags[i]
     return room_xflags2, bits
+
 
 def encode_room_xflags(xflags):
     # Run length coding
@@ -110,8 +131,11 @@ def encode_room_xflags(xflags):
 
     return xflags, rlc_flags
 
+
 # Create a byte array from the scene flag table created by get_collectible_flag_table
-def get_collectible_flag_table_bytes(scene_flag_table: dict[int, dict[int, int]]) -> tuple[bytearray, int]:
+def get_collectible_flag_table_bytes(
+    scene_flag_table: dict[int, dict[int, int]],
+) -> tuple[bytearray, int]:
     num_flag_bytes = 0
     bytes = bytearray()
     bytes.append(len(scene_flag_table.keys()))
@@ -123,13 +147,16 @@ def get_collectible_flag_table_bytes(scene_flag_table: dict[int, dict[int, int]]
         for room in rooms:
             bytes.append(room)
             bytes.append((num_flag_bytes & 0xFF00) >> 8)
-            bytes.append(num_flag_bytes & 0x00FF )
+            bytes.append(num_flag_bytes & 0x00FF)
             num_flag_bytes += ceil((rooms[room] + 1) / 8)
 
     return bytes, num_flag_bytes
 
+
 # Build a list of alternative overrides for alternate scene setups
-def get_alt_list_bytes(alt_list: list[tuple[Location, tuple[int, int, int], tuple[int, int, int]]]) -> bytearray:
+def get_alt_list_bytes(
+    alt_list: list[tuple[Location, tuple[int, int, int], tuple[int, int, int]]],
+) -> bytearray:
     bytes = bytearray()
     for entry in alt_list:
         location, alt, primary = entry

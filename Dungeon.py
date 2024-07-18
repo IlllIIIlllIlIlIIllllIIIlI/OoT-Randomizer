@@ -1,6 +1,6 @@
 from __future__ import annotations
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Optional, Any
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from Hints import HintArea
@@ -10,7 +10,9 @@ if TYPE_CHECKING:
 
 
 class Dungeon:
-    def __init__(self, world: World, name: str, hint: HintArea, regions: Optional[list[Region]] = None) -> None:
+    def __init__(
+        self, world: World, name: str, hint: HintArea, regions: Optional[list[Region]] = None
+    ) -> None:
         self.world: World = world
         self.name: str = name
         self.hint: HintArea = hint
@@ -42,7 +44,9 @@ class Dungeon:
 
     @staticmethod
     def from_vanilla_reward(item: Item) -> Dungeon:
-        dungeons = [dungeon for dungeon in item.world.dungeons if dungeon.vanilla_reward == item.name]
+        dungeons = [
+            dungeon for dungeon in item.world.dungeons if dungeon.vanilla_reward == item.name
+        ]
         if dungeons:
             return dungeons[0]
 
@@ -56,7 +60,11 @@ class Dungeon:
 
     @property
     def shuffle_bosskeys(self) -> str:
-        return self.world.settings.shuffle_bosskeys if self.name != 'Ganons Castle' else self.world.settings.shuffle_ganon_bosskey
+        return (
+            self.world.settings.shuffle_bosskeys
+            if self.name != "Ganons Castle"
+            else self.world.settings.shuffle_ganon_bosskey
+        )
 
     @property
     def shuffle_silver_rupees(self) -> str:
@@ -81,16 +89,15 @@ class Dungeon:
     @property
     def vanilla_boss_name(self) -> Optional[str]:
         return {
-            'Deku Tree': 'Queen Gohma',
-            'Dodongos Cavern': 'King Dodongo',
-            'Jabu Jabus Belly': 'Barinade',
-            'Forest Temple': 'Phantom Ganon',
-            'Fire Temple': 'Volvagia',
-            'Water Temple': 'Morpha',
-            'Shadow Temple': 'Bongo Bongo',
-            'Spirit Temple': 'Twinrova',
+            "Deku Tree": "Queen Gohma",
+            "Dodongos Cavern": "King Dodongo",
+            "Jabu Jabus Belly": "Barinade",
+            "Forest Temple": "Phantom Ganon",
+            "Fire Temple": "Volvagia",
+            "Water Temple": "Morpha",
+            "Shadow Temple": "Bongo Bongo",
+            "Spirit Temple": "Twinrova",
         }.get(self.name)
-
 
     @property
     def vanilla_reward(self) -> Optional[str]:
@@ -102,40 +109,62 @@ class Dungeon:
 
     def get_silver_rupee_names(self) -> set[str]:
         from Item import ItemInfo
-        return {name for name, item in ItemInfo.items.items() if item.type == 'SilverRupee' and self.name in name}
+
+        return {
+            name
+            for name, item in ItemInfo.items.items()
+            if item.type == "SilverRupee" and self.name in name
+        }
 
     def get_item_names(self) -> set[str]:
-        return (self.get_silver_rupee_names() |
-                {self.item_name(name) for name in ["Map", "Compass", "Small Key", "Boss Key", "Small Key Ring"]})
+        return self.get_silver_rupee_names() | {
+            self.item_name(name)
+            for name in ["Map", "Compass", "Small Key", "Boss Key", "Small Key Ring"]
+        }
 
     def is_dungeon_item(self, item: Item) -> bool:
         return item.name in [dungeon_item.name for dungeon_item in self.all_items]
 
     def get_restricted_dungeon_items(self) -> Iterator[Item]:
-        if self.shuffle_mapcompass == 'dungeon' or (self.empty and self.shuffle_mapcompass in ['any_dungeon', 'overworld', 'keysanity', 'regional']):
+        if self.shuffle_mapcompass == "dungeon" or (
+            self.empty
+            and self.shuffle_mapcompass in ["any_dungeon", "overworld", "keysanity", "regional"]
+        ):
             yield from self.dungeon_items
-        if self.shuffle_smallkeys == 'dungeon' or (self.empty and self.shuffle_smallkeys in ['any_dungeon', 'overworld', 'keysanity', 'regional']):
+        if self.shuffle_smallkeys == "dungeon" or (
+            self.empty
+            and self.shuffle_smallkeys in ["any_dungeon", "overworld", "keysanity", "regional"]
+        ):
             yield from self.small_keys
-        if self.shuffle_bosskeys == 'dungeon' or (self.empty and self.shuffle_bosskeys in ['any_dungeon', 'overworld', 'keysanity', 'regional']):
+        if self.shuffle_bosskeys == "dungeon" or (
+            self.empty
+            and self.shuffle_bosskeys in ["any_dungeon", "overworld", "keysanity", "regional"]
+        ):
             yield from self.boss_key
-        if self.shuffle_silver_rupees == 'dungeon' or (self.empty and self.shuffle_silver_rupees in ['any_dungeon', 'overworld', 'anywhere', 'regional']):
+        if self.shuffle_silver_rupees == "dungeon" or (
+            self.empty
+            and self.shuffle_silver_rupees in ["any_dungeon", "overworld", "anywhere", "regional"]
+        ):
             yield from self.silver_rupees
-        if self.shuffle_dungeon_rewards in ('vanilla', 'dungeon'): # we don't lock rewards inside pre-completed dungeons since they're still useful outside
+        if self.shuffle_dungeon_rewards in (
+            "vanilla",
+            "dungeon",
+        ):  # we don't lock rewards inside pre-completed dungeons since they're still useful outside
             yield from self.reward
 
     # get a list of items that don't have to be in their proper dungeon
     def get_unrestricted_dungeon_items(self) -> Iterator[Item]:
         if self.empty:
             return
-        if self.shuffle_mapcompass in ['any_dungeon', 'overworld', 'keysanity', 'regional']:
+        if self.shuffle_mapcompass in ["any_dungeon", "overworld", "keysanity", "regional"]:
             yield from self.dungeon_items
-        if self.shuffle_smallkeys in ['any_dungeon', 'overworld', 'keysanity', 'regional']:
+        if self.shuffle_smallkeys in ["any_dungeon", "overworld", "keysanity", "regional"]:
             yield from self.small_keys
-        if self.shuffle_bosskeys in ['any_dungeon', 'overworld', 'keysanity', 'regional']:
+        if self.shuffle_bosskeys in ["any_dungeon", "overworld", "keysanity", "regional"]:
             yield from self.boss_key
-        if self.shuffle_silver_rupees in ['any_dungeon', 'overworld', 'anywhere', 'regional']:
+        if self.shuffle_silver_rupees in ["any_dungeon", "overworld", "anywhere", "regional"]:
             yield from self.silver_rupees
-        if self.shuffle_dungeon_rewards in ('any_dungeon', 'overworld', 'anywhere', 'regional'):
+        if self.shuffle_dungeon_rewards in ("any_dungeon", "overworld", "anywhere", "regional"):
             yield from self.reward
 
     def __str__(self) -> str:

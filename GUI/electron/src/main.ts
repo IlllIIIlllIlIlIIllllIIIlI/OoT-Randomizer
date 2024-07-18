@@ -66,25 +66,25 @@ async function createApp() {
   });
 
   //Browser Window common options
-  let browserOptions = { 
-    icon: path.join(__dirname, '../src/assets/icon/png/64x64.png'), 
-    title: 'OoT Randomizer GUI', 
-    opacity: 1.00, 
-    backgroundColor: '#000000', 
-    minWidth: 880, 
-    minHeight: 680, 
-    width: mainWindowState.width, 
-    height: mainWindowState.height, 
-    x: mainWindowState.x, y: 
-    mainWindowState.y, 
-    show: false, 
-    webPreferences: { 
-      sandbox: false, 
-      nodeIntegration: false, 
-      contextIsolation: true, 
-      webviewTag: false, 
-      preload: path.join(__dirname, 'preload.js') 
-    } 
+  let browserOptions = {
+    icon: path.join(__dirname, '../src/assets/icon/png/64x64.png'),
+    title: 'OoT Randomizer GUI',
+    opacity: 1.00,
+    backgroundColor: '#000000',
+    minWidth: 880,
+    minHeight: 680,
+    width: mainWindowState.width,
+    height: mainWindowState.height,
+    x: mainWindowState.x, y:
+    mainWindowState.y,
+    show: false,
+    webPreferences: {
+      sandbox: false,
+      nodeIntegration: false,
+      contextIsolation: true,
+      webviewTag: false,
+      preload: path.join(__dirname, 'preload.js')
+    }
   };
 
   //Override menu (only need dev tools shortcut)
@@ -277,7 +277,7 @@ function determineDefaultPyPath() {
       if (version.toLowerCase().includes("python"))
         version = version.toLowerCase().split("python")[1].trim();
     });
-    
+
     promiseFromChildProcess(pythonExec).then(function () {
       pythonExec = null;
 
@@ -294,7 +294,7 @@ function determineDefaultPyPath() {
 
         resolve(defaultWindowsExec);
       }
-        
+
     }).catch(err => {
       reject(err);
     });

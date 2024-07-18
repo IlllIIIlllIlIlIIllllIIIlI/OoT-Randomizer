@@ -343,7 +343,7 @@
 	.sectionBox {
 		min-width: 390px;
 	}
-	
+
 }
 
 @media (min-width: 768px) {
@@ -399,7 +399,7 @@
 		z-index: 10;
 		height: 7.5em;
 	}
-	
+
 	#logofooter {
 		vertical-align: middle;
 		height: 70%;
@@ -550,7 +550,7 @@
 		margin-top: 15px;
 		z-index: 10;
 		height: 7.5em;
-	}	
+	}
 
 	#logofooter {
 		vertical-align: middle;

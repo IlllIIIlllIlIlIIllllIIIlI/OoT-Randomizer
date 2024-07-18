@@ -61,12 +61,12 @@ vrom start: E60920
 en_mm running man
 vram start: 80AD0600
 vrom start: E50440
-ram start: 801EA580, hook at 
+ram start: 801EA580, hook at
 
 en_go2 biggoron actor
 vram start: 80B56910
 vrom start: ED2040
-hook at   : 
+hook at   :
 ram       : 801E9560
 
 bgs flag 1: 80B57B68, ED3298, 1258
@@ -342,5 +342,3 @@ item_get_inf[0x1f]
  Boss (give Poachers Saw)
 --------------------
 no flag set
-
-

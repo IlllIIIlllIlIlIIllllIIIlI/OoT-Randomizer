@@ -26,14 +26,17 @@ class Rom(BigStream):
         self.force_patch: list[int] = []
         self.dma: DMAIterator = DMAIterator(self, DMADATA_START)
 
-        with open(data_path('generated/symbols.json'), 'r') as stream:
+        with open(data_path("generated/symbols.json"), "r") as stream:
             symbols = json.load(stream)
-            self.symbols: dict[str, int] = {name: {'address': int(sym['address'], 16), 'length': sym['length']} for name, sym in symbols.items()}
+            self.symbols: dict[str, int] = {
+                name: {"address": int(sym["address"], 16), "length": sym["length"]}
+                for name, sym in symbols.items()
+            }
 
         if file is None:
             return
 
-        decompressed_file: str = local_path('ZOOTDEC.z64')
+        decompressed_file: str = local_path("ZOOTDEC.z64")
 
         os.chdir(local_path())
 
@@ -44,12 +47,12 @@ class Rom(BigStream):
             except (FileNotFoundError, RuntimeError):
                 # Decompress the provided file.
                 if not file:
-                    raise FileNotFoundError('Must specify path to base ROM')
+                    raise FileNotFoundError("Must specify path to base ROM")
                 self.read_rom(file, decompressed_file)
         elif file:
             self.read_rom(file, decompressed_file)
         else:
-            raise FileNotFoundError('Must specify path to base ROM')
+            raise FileNotFoundError("Must specify path to base ROM")
 
         # Add file to maximum size
         self.buffer.extend(bytearray([0x00] * (0x4000000 - len(self.buffer))))
@@ -66,11 +69,13 @@ class Rom(BigStream):
         new_rom.force_patch = copy.copy(self.force_patch)
         return new_rom
 
-    def read_rom(self, input_file: str, output_file: Optional[str] = None, verify_crc: bool = True) -> None:
+    def read_rom(
+        self, input_file: str, output_file: Optional[str] = None, verify_crc: bool = True
+    ) -> None:
         try:
-            with open(input_file, 'rb') as stream:
+            with open(input_file, "rb") as stream:
                 self.buffer = bytearray(stream.read())
-        except FileNotFoundError as ex:
+        except FileNotFoundError:
             raise FileNotFoundError(f'Invalid path to Base ROM: "{input_file}"')
 
         # Validate ROM file
@@ -78,25 +83,31 @@ class Rom(BigStream):
             return
 
         valid_crc = [
-            [0xEC, 0x70, 0x11, 0xB7, 0x76, 0x16, 0xD7, 0x2B], # Compressed
-            [0x70, 0xEC, 0xB7, 0x11, 0x16, 0x76, 0x2B, 0xD7], # Byteswap compressed
-            [0x93, 0x52, 0x2E, 0x7B, 0xE5, 0x06, 0xD4, 0x27], # Decompressed
+            [0xEC, 0x70, 0x11, 0xB7, 0x76, 0x16, 0xD7, 0x2B],  # Compressed
+            [0x70, 0xEC, 0xB7, 0x11, 0x16, 0x76, 0x2B, 0xD7],  # Byteswap compressed
+            [0x93, 0x52, 0x2E, 0x7B, 0xE5, 0x06, 0xD4, 0x27],  # Decompressed
         ]
 
         file_name = os.path.splitext(input_file)
         rom_crc = list(self.buffer[0x10:0x18])
         if rom_crc not in valid_crc:
             # Bad CRC validation
-            raise RuntimeError(f'ROM file {input_file} is not a valid OoT 1.0 US ROM.')
-        elif len(self.buffer) < 0x2000000 or len(self.buffer) > 0x4000000 or file_name[1].lower() not in ('.z64', '.n64'):
+            raise RuntimeError(f"ROM file {input_file} is not a valid OoT 1.0 US ROM.")
+        elif (
+            len(self.buffer) < 0x2000000
+            or len(self.buffer) > 0x4000000
+            or file_name[1].lower() not in (".z64", ".n64")
+        ):
             # ROM is too big, or too small, or a bad type
-            raise RuntimeError(f'ROM file {input_file} is not a valid OoT 1.0 US ROM.')
+            raise RuntimeError(f"ROM file {input_file} is not a valid OoT 1.0 US ROM.")
         elif len(self.buffer) == 0x2000000:
             # If Input ROM is compressed, then Decompress it
             if output_file:
                 self.decompress_rom(input_file, output_file, verify_crc)
             else:
-                raise RuntimeError('ROM was unable to be decompressed. Please supply an already decompressed ROM.')
+                raise RuntimeError(
+                    "ROM was unable to be decompressed. Please supply an already decompressed ROM."
+                )
         else:
             # ROM file is a valid and already uncompressed
             pass
@@ -104,34 +115,36 @@ class Rom(BigStream):
     def decompress_rom(self, input_file: str, output_file: str, verify_crc: bool = True) -> None:
         sub_dir = "./" if is_bundled() else "bin/Decompress/"
 
-        if platform.system() == 'Windows':
-            if platform.machine() == 'AMD64':
+        if platform.system() == "Windows":
+            if platform.machine() == "AMD64":
                 subcall = [sub_dir + "Decompress.exe", input_file, output_file]
-            elif platform.machine() == 'ARM64':
+            elif platform.machine() == "ARM64":
                 subcall = [sub_dir + "Decompress_ARM64.exe", input_file, output_file]
             else:
                 subcall = [sub_dir + "Decompress32.exe", input_file, output_file]
-        elif platform.system() == 'Linux':
-            if platform.machine() in ('arm64', 'aarch64', 'aarch64_be', 'armv8b', 'armv8l'):
+        elif platform.system() == "Linux":
+            if platform.machine() in ("arm64", "aarch64", "aarch64_be", "armv8b", "armv8l"):
                 subcall = [sub_dir + "Decompress_ARM64", input_file, output_file]
-            elif platform.machine() in ('arm', 'armv7l', 'armhf'):
+            elif platform.machine() in ("arm", "armv7l", "armhf"):
                 subcall = [sub_dir + "Decompress_ARM32", input_file, output_file]
             else:
                 subcall = [sub_dir + "Decompress", input_file, output_file]
-        elif platform.system() == 'Darwin':
-            if platform.machine() == 'arm64':
+        elif platform.system() == "Darwin":
+            if platform.machine() == "arm64":
                 subcall = [sub_dir + "Decompress_ARM64.out", input_file, output_file]
             else:
                 subcall = [sub_dir + "Decompress.out", input_file, output_file]
         else:
-            raise RuntimeError('Unsupported operating system for decompression. Please supply an already decompressed ROM.')
+            raise RuntimeError(
+                "Unsupported operating system for decompression. Please supply an already decompressed ROM."
+            )
 
         subprocess.call(subcall, **subprocess_args())
         self.read_rom(output_file, verify_crc=verify_crc)
 
     def write_byte(self, address: int, value: int) -> None:
         super().write_byte(address, value)
-        self.changed_address[self.last_address-1] = value
+        self.changed_address[self.last_address - 1] = value
 
     def write_bytes_restrictive(self, start: int, size: int, values: Sequence[int]) -> None:
         for i in range(size):
@@ -158,15 +171,15 @@ class Rom(BigStream):
         self.write_version_bytes()
 
     def sym(self, symbol_name: str) -> int:
-        return self.symbols[symbol_name]['address']
+        return self.symbols[symbol_name]["address"]
 
     def sym_length(self, symbol_name: str) -> int:
-        return self.symbols[symbol_name]['length']
+        return self.symbols[symbol_name]["length"]
 
     def write_to_file(self, file: str) -> None:
         self.verify_dmadata()
         self.update_header()
-        with open(file, 'wb') as outfile:
+        with open(file, "wb") as outfile:
             outfile.write(self.buffer)
 
     def update_header(self) -> None:
@@ -209,19 +222,25 @@ class Rom(BigStream):
 
             if this_end > next_start:
                 overlapping_records.append(
-                    f'0x{this_start:08X} - 0x{this_end:08X} (Size: 0x{this_size:04X})\n0x{next_start:08X} - 0x{next_end:08X} (Size: 0x{next_size:04X})'
+                    f"0x{this_start:08X} - 0x{this_end:08X} (Size: 0x{this_size:04X})\n0x{next_start:08X} - 0x{next_end:08X} (Size: 0x{next_size:04X})"
                 )
 
         if len(overlapping_records) > 0:
-            raise Exception("Overlapping DMA Data Records!\n%s" %
-                            '\n-------------------------------------\n'.join(overlapping_records))
+            raise Exception(
+                "Overlapping DMA Data Records!\n%s"
+                % "\n-------------------------------------\n".join(overlapping_records)
+            )
 
     # update dmadata record with start vrom address "key"
     # if key is not found, then attempt to add a new dmadata entry
-    def update_dmadata_record_by_key(self, key: Optional[int], start: int, end: int, from_file: Optional[int] = None) -> None:
+    def update_dmadata_record_by_key(
+        self, key: Optional[int], start: int, end: int, from_file: Optional[int] = None
+    ) -> None:
         dma_entry = self.dma.get_dmadata_record_by_key(key)
         if dma_entry is None:
-            raise Exception(f"dmadata update failed: key {key:{'x' if key else ''}} not found in dmadata and dma table is full.")
+            raise Exception(
+                f"dmadata update failed: key {key:{'x' if key else ''}} not found in dmadata and dma table is full."
+            )
 
         if from_file is None:
             from_file = -1 if key is None else key
@@ -230,7 +249,9 @@ class Rom(BigStream):
     # This will scan for any changes that have been made to the DMA table
     # By default, this assumes any changes here are new files, so this should only be called
     # after patching in the new files, but before vanilla files are repointed
-    def scan_dmadata_update(self, preserve_from_file: bool = False, assume_move: bool = False) -> None:
+    def scan_dmadata_update(
+        self, preserve_from_file: bool = False, assume_move: bool = False
+    ) -> None:
         for dma_entry in self.dma:
             dma_start, dma_end, dma_size = dma_entry.as_tuple()
             old_dma_start, old_dma_end, old_dma_size = self.original.dma[dma_entry.index].as_tuple()
@@ -259,7 +280,9 @@ class Rom(BigStream):
             if byte != orig_byte:
                 self.changed_address[i] = byte
         if size < original_size:
-            self.changed_address.update(zip(range(size, original_size-1), [0]*(original_size-size)))
+            self.changed_address.update(
+                zip(range(size, original_size - 1), [0] * (original_size - size))
+            )
 
 
 class DMAEntry:
@@ -320,8 +343,10 @@ class DMAIterator:
         while start != self.dma_start:
             i += 1
             if i > 2000:
-                dma_bytes = self.rom.read_bytes(self.rom.dma.dma_start, 160).hex(' ', 4)
-                raise Exception(f"DMA entry for DMA table not found. Attempted to find DMA entry starting at {self.dma_start}. First 160 bytes of DMA table: {dma_bytes}")
+                dma_bytes = self.rom.read_bytes(self.rom.dma.dma_start, 160).hex(" ", 4)
+                raise Exception(
+                    f"DMA entry for DMA table not found. Attempted to find DMA entry starting at {self.dma_start}. First 160 bytes of DMA table: {dma_bytes}"
+                )
             start = self.rom.read_int32(self.rom.dma.dma_start + (i * 0x10))
         self.dma_index = i
         self.dma_end = self.rom.read_int32(self.dma_start + (self.dma_index * 0x10) + 0x04)
@@ -348,7 +373,9 @@ class DMAIterator:
                 return dma_entry
             elif dma_entry.start == key:
                 return dma_entry
-        raise Exception(f"`get_dmadata_record_by_key`: DMA Start '{key}' not found in the DMA Table.")
+        raise Exception(
+            f"`get_dmadata_record_by_key`: DMA Start '{key}' not found in the DMA Table."
+        )
 
     # Gets the last used byte of rom defined in the DMA table
     def end_of_data(self) -> int:
@@ -369,13 +396,17 @@ class DMAIterator:
         # Find free space between files.
         for i in range(len(files)):
             end_current = ((files[i][1] + 0x0F) >> 4) << 4
-            start_next = ((files[i+1][0] + 0x0F) >> 4) << 4 if i+1 < len(files) else len(self.rom.buffer)
+            start_next = (
+                ((files[i + 1][0] + 0x0F) >> 4) << 4 if i + 1 < len(files) else len(self.rom.buffer)
+            )
             if end_current < start_next:
                 free_space.append((start_next - end_current, end_current))
 
         free_space.sort()
         if not free_space:
-            raise Exception(f"No free space in ROM. This should never happen. DMA entries: {self.dma_entries}")
+            raise Exception(
+                f"No free space in ROM. This should never happen. DMA entries: {self.dma_entries}"
+            )
 
         if size is None:
             # Return the largest free space.
@@ -385,4 +416,6 @@ class DMAIterator:
             try:
                 return next(filter(lambda f: f[0] >= size, free_space))[1]
             except StopIteration:
-                raise Exception(f"Not enough free space in ROM to fit a file of size {size}. Largest region of free space available: {free_space[-1][0]}.")
+                raise Exception(
+                    f"Not enough free space in ROM to fit a file of size {size}. Largest region of free space available: {free_space[-1][0]}."
+                )

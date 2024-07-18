@@ -3,7 +3,7 @@ import logging
 import random
 from collections import OrderedDict
 from itertools import chain
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from Item import Item
 from LocationList import location_sort_order
@@ -20,47 +20,48 @@ if TYPE_CHECKING:
     from World import World
 
 HASH_ICONS: list[str] = [
-    'Deku Stick',
-    'Deku Nut',
-    'Bow',
-    'Slingshot',
-    'Fairy Ocarina',
-    'Bombchu',
-    'Longshot',
-    'Boomerang',
-    'Lens of Truth',
-    'Beans',
-    'Megaton Hammer',
-    'Bottled Fish',
-    'Bottled Milk',
-    'Mask of Truth',
-    'SOLD OUT',
-    'Cucco',
-    'Mushroom',
-    'Saw',
-    'Frog',
-    'Master Sword',
-    'Mirror Shield',
-    'Kokiri Tunic',
-    'Hover Boots',
-    'Silver Gauntlets',
-    'Gold Scale',
-    'Stone of Agony',
-    'Skull Token',
-    'Heart Container',
-    'Boss Key',
-    'Compass',
-    'Map',
-    'Big Magic',
+    "Deku Stick",
+    "Deku Nut",
+    "Bow",
+    "Slingshot",
+    "Fairy Ocarina",
+    "Bombchu",
+    "Longshot",
+    "Boomerang",
+    "Lens of Truth",
+    "Beans",
+    "Megaton Hammer",
+    "Bottled Fish",
+    "Bottled Milk",
+    "Mask of Truth",
+    "SOLD OUT",
+    "Cucco",
+    "Mushroom",
+    "Saw",
+    "Frog",
+    "Master Sword",
+    "Mirror Shield",
+    "Kokiri Tunic",
+    "Hover Boots",
+    "Silver Gauntlets",
+    "Gold Scale",
+    "Stone of Agony",
+    "Skull Token",
+    "Heart Container",
+    "Boss Key",
+    "Compass",
+    "Map",
+    "Big Magic",
 ]
 
 PASSWORD_NOTES: list[str] = [
-    'A',
-    'C down',
-    'C right',
-    'C left',
-    'C up',
+    "A",
+    "C down",
+    "C right",
+    "C left",
+    "C up",
 ]
+
 
 class Spoiler:
     def __init__(self, worlds: list[World]) -> None:
@@ -82,18 +83,26 @@ class Spoiler:
     def build_file_hash(self) -> None:
         dist_file_hash = self.settings.distribution.file_hash
         for i in range(5):
-            self.file_hash.append(random.randint(0, 31) if dist_file_hash[i] is None else HASH_ICONS.index(dist_file_hash[i]))
+            self.file_hash.append(
+                random.randint(0, 31)
+                if dist_file_hash[i] is None
+                else HASH_ICONS.index(dist_file_hash[i])
+            )
 
     def build_password(self, password: bool = False) -> None:
         dist_password = self.settings.distribution.password
         for i in range(6):
             if password:
-                self.password.append(random.randint(1, 5) if dist_password[i] is None else PASSWORD_NOTES.index(dist_password[i]) + 1)
+                self.password.append(
+                    random.randint(1, 5)
+                    if dist_password[i] is None
+                    else PASSWORD_NOTES.index(dist_password[i]) + 1
+                )
             else:
                 self.password.append(0)
 
     def parse_data(self) -> None:
-        for (sphere_nr, sphere) in self.playthrough.items():
+        for sphere_nr, sphere in self.playthrough.items():
             sorted_sphere = [location for location in sphere]
             sort_order = {"Song": 0, "Boss": -1}
             sorted_sphere.sort(key=lambda item: (item.world.id * 10) + sort_order.get(item.type, 1))
@@ -102,9 +111,20 @@ class Spoiler:
         self.locations = {}
         for world in self.worlds:
             spoiler_locations = sorted(
-                    [location for location in world.get_locations() if not location.locked and not location.type.startswith('Hint')],
-                    key=lambda x: location_sort_order.get(x.name, 100000))
-            self.locations[world.id] = OrderedDict([(str(location), location.item) for location in spoiler_locations if location.item is not None])
+                [
+                    location
+                    for location in world.get_locations()
+                    if not location.locked and not location.type.startswith("Hint")
+                ],
+                key=lambda x: location_sort_order.get(x.name, 100000),
+            )
+            self.locations[world.id] = OrderedDict(
+                [
+                    (str(location), location.item)
+                    for location in spoiler_locations
+                    if location.item is not None
+                ]
+            )
 
         entrance_sort_order = {
             "Spawn": 0,
@@ -122,7 +142,7 @@ class Spoiler:
             "Grotto": 8,
             "Grave": 8,
         }
-        for (sphere_nr, sphere) in self.entrance_playthrough.items():
+        for sphere_nr, sphere in self.entrance_playthrough.items():
             sorted_sphere = [entrance for entrance in sphere]
             sorted_sphere.sort(key=lambda entrance: entrance_sort_order.get(entrance.type, -1))
             sorted_sphere.sort(key=lambda entrance: entrance.name)
@@ -131,7 +151,11 @@ class Spoiler:
 
         self.entrances = {}
         for world in self.worlds:
-            spoiler_entrances = [entrance for entrance in world.get_shuffled_entrances() if entrance.primary or entrance.type == 'Overworld']
+            spoiler_entrances = [
+                entrance
+                for entrance in world.get_shuffled_entrances()
+                if entrance.primary or entrance.type == "Overworld"
+            ]
             spoiler_entrances.sort(key=lambda entrance: entrance.name)
             spoiler_entrances.sort(key=lambda entrance: entrance_sort_order.get(entrance.type, -1))
             self.entrances[world.id] = spoiler_entrances
@@ -143,7 +167,9 @@ class Spoiler:
 
     def find_misc_hint_items(self) -> None:
         search = Search([world.state for world in self.worlds])
-        all_locations = [location for world in self.worlds for location in world.get_filled_locations()]
+        all_locations = [
+            location for world in self.worlds for location in world.get_filled_locations()
+        ]
         for location in search.iter_reachable_locations(all_locations[:]):
             # include locations that are reachable but not part of the spoiler log playthrough in misc. item hints
             location.maybe_set_misc_hints()
@@ -155,19 +181,25 @@ class Spoiler:
             location.maybe_set_misc_hints()
 
     def create_playthrough(self) -> None:
-        logger = logging.getLogger('')
-        if self.worlds[0].check_beatable_only and not Search([world.state for world in self.worlds]).can_beat_game():
-            raise RuntimeError('Game unbeatable after placing all items.')
+        logger = logging.getLogger("")
+        if (
+            self.worlds[0].check_beatable_only
+            and not Search([world.state for world in self.worlds]).can_beat_game()
+        ):
+            raise RuntimeError("Game unbeatable after placing all items.")
 
         # create a copy as we will modify it
         worlds = self.copy_worlds()
 
         # if we only check for beatable, we can do this sanity check first before writing down spheres
-        if worlds[0].check_beatable_only and not Search([world.state for world in worlds]).can_beat_game():
-            raise RuntimeError('Uncopied world beatable but copied world is not.')
+        if (
+            worlds[0].check_beatable_only
+            and not Search([world.state for world in worlds]).can_beat_game()
+        ):
+            raise RuntimeError("Uncopied world beatable but copied world is not.")
 
         search = RewindableSearch([world.state for world in worlds])
-        logger.debug('Initial search: %s', search.state_list[0].get_prog_items())
+        logger.debug("Initial search: %s", search.state_list[0].get_prog_items())
         # Get all item locations in the worlds
         item_locations = search.progression_locations()
         # Omit certain items from the playthrough
@@ -175,14 +207,16 @@ class Spoiler:
         # Generate a list of spheres by iterating over reachable locations without collecting as we go.
         # Collecting every item in one sphere means that every item
         # in the next sphere is collectable. Will contain every reachable item this way.
-        logger.debug('Building up collection spheres.')
+        logger.debug("Building up collection spheres.")
         collection_spheres = []
         entrance_spheres = []
-        remaining_entrances = set(entrance for world in worlds for entrance in world.get_shuffled_entrances())
+        remaining_entrances = set(
+            entrance for world in worlds for entrance in world.get_shuffled_entrances()
+        )
 
         search.checkpoint()
         search.collect_pseudo_starting_items()
-        logger.debug('With pseudo starting items: %s', search.state_list[0].get_prog_items())
+        logger.debug("With pseudo starting items: %s", search.state_list[0].get_prog_items())
 
         while True:
             search.checkpoint()
@@ -201,8 +235,12 @@ class Spoiler:
                 # Collect the item for the state world it is for
                 search.state_list[location.item.world.id].collect(location.item)
                 location.maybe_set_misc_hints()
-        logger.info('Collected %d spheres', len(collection_spheres))
-        self.full_playthrough = dict((location.name, i + 1) for i, sphere in enumerate(collection_spheres) for location in sphere)
+        logger.info("Collected %d spheres", len(collection_spheres))
+        self.full_playthrough = dict(
+            (location.name, i + 1)
+            for i, sphere in enumerate(collection_spheres)
+            for location in sphere
+        )
         self.max_sphere = len(collection_spheres)
 
         # Reduce each sphere in reverse order, by checking if the game is beatable
@@ -229,9 +267,12 @@ class Spoiler:
                 location.item = None
 
                 # An item can only be required if it isn't already obtained or if it's progressive
-                if search.state_list[old_item.world.id].item_count(old_item.solver_id) < old_item.world.max_progressions[old_item.name]:
+                if (
+                    search.state_list[old_item.world.id].item_count(old_item.solver_id)
+                    < old_item.world.max_progressions[old_item.name]
+                ):
                     # Test whether the game is still beatable from here.
-                    logger.debug('Checking if %s is required to beat the game.', old_item.name)
+                    logger.debug("Checking if %s is required to beat the game.", old_item.name)
                     if not search.can_beat_game():
                         # still required, so reset the item
                         location.item = old_item
@@ -249,17 +290,27 @@ class Spoiler:
                 sub_search = Search([world.state for world in worlds])
 
                 # Test whether the game is still beatable from here.
-                logger.debug('Checking if reaching %s, through %s, is required to beat the game.', old_connected_region.name, entrance.name)
+                logger.debug(
+                    "Checking if reaching %s, through %s, is required to beat the game.",
+                    old_connected_region.name,
+                    entrance.name,
+                )
                 if not sub_search.can_beat_game():
                     # still required, so reconnect the entrance
                     entrance.connect(old_connected_region)
                     required_entrances.append(entrance)
 
         # Regenerate the spheres as we might not reach places the same way anymore.
-        search.reset() # search state has no items, okay to reuse sphere 0 cache
-        collection_spheres = [list(
-            filter(lambda loc: loc.item.advancement and loc.item.world.max_progressions[loc.item.name] > 0,
-                   search.iter_pseudo_starting_locations()))]
+        search.reset()  # search state has no items, okay to reuse sphere 0 cache
+        collection_spheres = [
+            list(
+                filter(
+                    lambda loc: loc.item.advancement
+                    and loc.item.world.max_progressions[loc.item.name] > 0,
+                    search.iter_pseudo_starting_locations(),
+                )
+            )
+        ]
         entrance_spheres = []
         remaining_entrances = set(required_entrances)
         collected = set()
@@ -286,24 +337,33 @@ class Spoiler:
                 # Collect the item for the state world it is for
                 search.state_list[location.item.world.id].collect(location.item)
             collected.clear()
-        logger.info('Collected %d final spheres', len(collection_spheres))
+        logger.info("Collected %d final spheres", len(collection_spheres))
 
         if not search.can_beat_game(False):
-            logger.error('Playthrough could not beat the game!')
+            logger.error("Playthrough could not beat the game!")
             # Add temporary debugging info or breakpoint here if this happens
 
         # Then we can finally output our playthrough
-        self.playthrough = OrderedDict((str(i), {location: location.item for location in sphere}) for i, sphere in enumerate(collection_spheres))
+        self.playthrough = OrderedDict(
+            (str(i), {location: location.item for location in sphere})
+            for i, sphere in enumerate(collection_spheres)
+        )
         # Copy our misc. hint items, since we set them in the world copy
         for w, sw in zip(worlds, self.worlds):
             # But the actual location saved here may be in a different world
             for item_name, item_location in w.hinted_dungeon_reward_locations.items():
-                sw.hinted_dungeon_reward_locations[item_name] = self.worlds[item_location.world.id].get_location(item_location.name)
+                sw.hinted_dungeon_reward_locations[item_name] = self.worlds[
+                    item_location.world.id
+                ].get_location(item_location.name)
             for hint_type, item_location in w.misc_hint_item_locations.items():
-                sw.misc_hint_item_locations[hint_type] = self.worlds[item_location.world.id].get_location(item_location.name)
+                sw.misc_hint_item_locations[hint_type] = self.worlds[
+                    item_location.world.id
+                ].get_location(item_location.name)
 
         if worlds[0].entrance_shuffle:
-            self.entrance_playthrough = OrderedDict((str(i + 1), list(sphere)) for i, sphere in enumerate(entrance_spheres))
+            self.entrance_playthrough = OrderedDict(
+                (str(i + 1), list(sphere)) for i, sphere in enumerate(entrance_spheres)
+            )
 
 
 class Copier:
@@ -325,13 +385,21 @@ class Copier:
             self.worlds[id(world)] = world.copy()
             for dungeon in world.dungeons:
                 self.dungeons[id(dungeon)] = dungeon.copy()
-                for item in chain(dungeon.boss_key, dungeon.small_keys, dungeon.dungeon_items, dungeon.silver_rupees, dungeon.reward):
+                for item in chain(
+                    dungeon.boss_key,
+                    dungeon.small_keys,
+                    dungeon.dungeon_items,
+                    dungeon.silver_rupees,
+                    dungeon.reward,
+                ):
                     if id(item) in self.items:
                         continue
                     self.items[id(item)] = item.copy()
             for region in world.regions:
                 self.regions[id(region)] = region.copy()
-                for entrance in chain(region.entrances, region.exits, [region.savewarp] if region.savewarp else []):
+                for entrance in chain(
+                    region.entrances, region.exits, [region.savewarp] if region.savewarp else []
+                ):
                     if id(entrance) in self.entrances:
                         continue
                     self.entrances[id(entrance)] = entrance.copy()
@@ -357,29 +425,43 @@ class Copier:
             dungeon.regions = [self.regions.get(id(region), region) for region in dungeon.regions]
             dungeon.boss_key = [self.items.get(id(item), item) for item in dungeon.boss_key]
             dungeon.small_keys = [self.items.get(id(item), item) for item in dungeon.small_keys]
-            dungeon.dungeon_items = [self.items.get(id(item), item) for item in dungeon.dungeon_items]
-            dungeon.silver_rupees = [self.items.get(id(item), item) for item in dungeon.silver_rupees]
+            dungeon.dungeon_items = [
+                self.items.get(id(item), item) for item in dungeon.dungeon_items
+            ]
+            dungeon.silver_rupees = [
+                self.items.get(id(item), item) for item in dungeon.silver_rupees
+            ]
             dungeon.reward = [self.items.get(id(item), item) for item in dungeon.reward]
 
         for region in self.regions.values():
             region.world = self.worlds.get(id(region.world), region.world)
-            region.entrances = [self.entrances.get(id(entrance), entrance) for entrance in region.entrances]
+            region.entrances = [
+                self.entrances.get(id(entrance), entrance) for entrance in region.entrances
+            ]
             region.exits = [self.entrances.get(id(entrance), entrance) for entrance in region.exits]
-            region.locations = [self.locations.get(id(location), location) for location in region.locations]
+            region.locations = [
+                self.locations.get(id(location), location) for location in region.locations
+            ]
             region.dungeon = self.dungeons.get(id(region.dungeon), region.dungeon)
             region.savewarp = self.entrances.get(id(region.savewarp), region.savewarp)
 
         for entrance in self.entrances.values():
             entrance.world = self.worlds.get(id(entrance.world), entrance.world)
-            entrance.parent_region = self.regions.get(id(entrance.parent_region), entrance.parent_region)
-            entrance.connected_region = self.regions.get(id(entrance.connected_region), entrance.connected_region)
+            entrance.parent_region = self.regions.get(
+                id(entrance.parent_region), entrance.parent_region
+            )
+            entrance.connected_region = self.regions.get(
+                id(entrance.connected_region), entrance.connected_region
+            )
             entrance.reverse = self.entrances.get(id(entrance.reverse), entrance.reverse)
             entrance.replaces = self.entrances.get(id(entrance.replaces), entrance.replaces)
             entrance.assumed = self.entrances.get(id(entrance.assumed), entrance.assumed)
 
         for location in self.locations.values():
             location.world = self.worlds.get(id(location.world), location.world)
-            location.parent_region = self.regions.get(id(location.parent_region), location.parent_region)
+            location.parent_region = self.regions.get(
+                id(location.parent_region), location.parent_region
+            )
             location.item = self.items.get(id(location.item), location.item)
 
         for item in self.items.values():

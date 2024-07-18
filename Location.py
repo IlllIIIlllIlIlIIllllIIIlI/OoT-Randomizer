@@ -2,10 +2,16 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable, Iterable
 from enum import Enum
-from typing import TYPE_CHECKING, Optional, Any, overload
+from typing import TYPE_CHECKING, Optional, overload
 
 from HintList import misc_item_hint_table, misc_location_hint_table
-from LocationList import location_table, location_is_viewable, LocationAddress, LocationDefault, LocationFilterTags
+from LocationList import (
+    location_table,
+    location_is_viewable,
+    LocationAddress,
+    LocationDefault,
+    LocationFilterTags,
+)
 
 if TYPE_CHECKING:
     from Dungeon import Dungeon
@@ -23,9 +29,19 @@ class DisableType(Enum):
 
 
 class Location:
-    def __init__(self, name: str = '', address: LocationAddress = None, address2: LocationAddress = None, default: LocationDefault = None,
-                 location_type: str = 'Chest', scene: Optional[int] = None, parent: Optional[Region] = None,
-                 filter_tags: LocationFilterTags = None, internal: bool = False, vanilla_item: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        name: str = "",
+        address: LocationAddress = None,
+        address2: LocationAddress = None,
+        default: LocationDefault = None,
+        location_type: str = "Chest",
+        scene: Optional[int] = None,
+        parent: Optional[Region] = None,
+        filter_tags: LocationFilterTags = None,
+        internal: bool = False,
+        vanilla_item: Optional[str] = None,
+    ) -> None:
         self.name: str = name
         self.parent_region: Optional[Region] = parent
         self.item: Optional[Item] = None
@@ -46,13 +62,24 @@ class Location:
         self.disabled: DisableType = DisableType.ENABLED
         self.always: bool = False
         self.never: bool = False
-        self.filter_tags: Optional[tuple[str, ...]] = (filter_tags,) if isinstance(filter_tags, str) else filter_tags
+        self.filter_tags: Optional[tuple[str, ...]] = (
+            (filter_tags,) if isinstance(filter_tags, str) else filter_tags
+        )
         self.rule_string: Optional[str] = None
 
     def copy(self) -> Location:
-        new_location = Location(name=self.name, address=self.address, address2=self.address2, default=self.default,
-                                location_type=self.type, scene=self.scene, parent=self.parent_region,
-                                filter_tags=self.filter_tags, internal=self.internal, vanilla_item=self.vanilla_item)
+        new_location = Location(
+            name=self.name,
+            address=self.address,
+            address2=self.address2,
+            default=self.default,
+            location_type=self.type,
+            scene=self.scene,
+            parent=self.parent_region,
+            filter_tags=self.filter_tags,
+            internal=self.internal,
+            vanilla_item=self.vanilla_item,
+        )
 
         new_location.world = self.world
         new_location.item = self.item
@@ -97,9 +124,9 @@ class Location:
         if self.minor_only and item.majoritem:
             return False
         return (
-            not self.is_disabled and
-            self.can_fill_fast(item) and
-            (not check_access or state.search.spot_access(self, 'either'))
+            not self.is_disabled
+            and self.can_fill_fast(item)
+            and (not check_access or state.search.spot_access(self, "either"))
         )
 
     def can_fill_fast(self, item: Item, manual: bool = False) -> bool:
@@ -109,15 +136,21 @@ class Location:
 
     @property
     def is_disabled(self) -> bool:
-        return ((self.disabled == DisableType.DISABLED) or
-                (self.disabled == DisableType.PENDING and self.locked))
+        return (self.disabled == DisableType.DISABLED) or (
+            self.disabled == DisableType.PENDING and self.locked
+        )
 
     # Can the player see what's placed at this location without collecting it?
     # Used to reduce JSON spoiler noise
     def has_preview(self) -> bool:
         if self.world is None:
             return False
-        return location_is_viewable(self.name, self.world.settings.correct_chest_appearances, self.world.settings.fast_chests, world=self.world)
+        return location_is_viewable(
+            self.name,
+            self.world.settings.correct_chest_appearances,
+            self.world.settings.fast_chests,
+            world=self.world,
+        )
 
     def has_item(self) -> bool:
         return self.item is not None
@@ -131,20 +164,24 @@ class Location:
     def maybe_set_misc_hints(self) -> None:
         if self.item is None or self.item.world is None or self.world is None:
             return
-        if self.item.world.dungeon_rewards_hinted and self.item.type == 'DungeonReward':
+        if self.item.world.dungeon_rewards_hinted and self.item.type == "DungeonReward":
             if self.item.name not in self.item.world.hinted_dungeon_reward_locations:
                 self.item.world.hinted_dungeon_reward_locations[self.item.name] = self
-                logging.getLogger('').debug(f'{self.item.name} [{self.item.world.id}] set to [{self.name}]')
+                logging.getLogger("").debug(
+                    f"{self.item.name} [{self.item.world.id}] set to [{self.name}]"
+                )
         for hint_type in misc_item_hint_table:
             item = self.item.world.misc_hint_items[hint_type]
             if hint_type not in self.item.world.misc_hint_item_locations and self.item.name == item:
                 self.item.world.misc_hint_item_locations[hint_type] = self
-                logging.getLogger('').debug(f'{item} [{self.item.world.id}] set to [{self.name}]')
+                logging.getLogger("").debug(f"{item} [{self.item.world.id}] set to [{self.name}]")
         for hint_type in misc_location_hint_table:
             the_location = self.world.misc_hint_locations[hint_type]
             if hint_type not in self.world.misc_hint_location_items and self.name == the_location:
                 self.world.misc_hint_location_items[hint_type] = self.item
-                logging.getLogger('').debug(f'{the_location} [{self.world.id}] set to [{self.item.name}]')
+                logging.getLogger("").debug(
+                    f"{the_location} [{self.world.id}] set to [{self.item.name}]"
+                )
 
     def __str__(self) -> str:
         return self.name
@@ -174,22 +211,41 @@ def LocationFactory(locations: str | list[str]) -> Location | list[Location]:
         if location in location_table:
             match_location = location
         else:
-            match_location = next(filter(lambda k: k.lower() == location.lower(), location_table), None)
+            match_location = next(
+                filter(lambda k: k.lower() == location.lower(), location_table), None
+            )
         if match_location:
-            type, scene, default, addresses, vanilla_item, filter_tags = location_table[match_location]
+            type, scene, default, addresses, vanilla_item, filter_tags = location_table[
+                match_location
+            ]
             if addresses is None:
                 addresses = (None, None)
             address, address2 = addresses
-            ret.append(Location(match_location, address, address2, default, type, scene, None, filter_tags, False, vanilla_item))
+            ret.append(
+                Location(
+                    match_location,
+                    address,
+                    address2,
+                    default,
+                    type,
+                    scene,
+                    None,
+                    filter_tags,
+                    False,
+                    vanilla_item,
+                )
+            )
         else:
-            raise KeyError('Unknown Location: %s', location)
+            raise KeyError("Unknown Location: %s", location)
 
     if singleton:
         return ret[0]
     return ret
 
 
-def LocationIterator(predicate: Callable[[Location], bool] = lambda loc: True) -> Iterable[Location]:
+def LocationIterator(
+    predicate: Callable[[Location], bool] = lambda loc: True,
+) -> Iterable[Location]:
     for location_name in location_table:
         location = LocationFactory(location_name)
         if predicate(location):

@@ -65,8 +65,8 @@ As a service to the player in this very long game, many cutscenes have been grea
 
 ### Getting Stuck
 
-With a game the size of _Ocarina of Time_, it's quite easy for new Randomizer players to get stuck in certain situations with no apparent path to progressing. 
-Before reporting an issue, please make sure to check out [our Logic wiki page](https://wiki.ootrandomizer.com/index.php?title=Logic). 
+With a game the size of _Ocarina of Time_, it's quite easy for new Randomizer players to get stuck in certain situations with no apparent path to progressing.
+Before reporting an issue, please make sure to check out [our Logic wiki page](https://wiki.ootrandomizer.com/index.php?title=Logic).
 We also have many community members who can help out in our [Discord](https://discord.gg/8nmX7fa).
 
 ### Settings
@@ -102,7 +102,7 @@ Unfortunately, a few known issues exist. These will hopefully be addressed in fu
 
 * The fishing minigame sometimes refuses to allow you to catch fish when playing specifically on Bizhawk. Save and Hard Reset (NOT savestate) and return to fix the
 issue. You should always Hard Reset to avoid this issue entirely.
-* Versions older than 3.0 of Project64 have known compatablity issues with OoTR. To avoid this either 
+* Versions older than 3.0 of Project64 have known compatablity issues with OoTR. To avoid this either
 [update to v3.0 and follow the rest of our Project64 guide](https://wiki.ootrandomizer.com/index.php?title=Project64) or change to one of our other two supported emulators.
 * Executing the collection delay glitch on various NPCs may have unpredictable and undesirable consequences.
 * This randomizer is based on the 1.0 version of _Ocarina of Time_, so some of its specific bugs remain.
@@ -237,7 +237,7 @@ issue. You should always Hard Reset to avoid this issue entirely.
   * Fix the change which makes graveyard grave hole ledges un-grabbable incorrectly applied to other ledges in the graveyard area.
   * Fix the file path for custom music on some Linux machines.
   * Fix "Spirit Temple MQ Beamos Room Chest" having an incorrect vanilla item.
-  * Starting with Magic Beans will now properly start you with 10 beans instead of 9. 
+  * Starting with Magic Beans will now properly start you with 10 beans instead of 9.
   * A rare softlock when fighting Gohma present in the original game has been fixed.
   * A crash when diving and resurfacing in very shallow water present in the original game has been fixed.
   * Various miscellaneous logic issues have been addressed.
@@ -384,7 +384,7 @@ issue. You should always Hard Reset to avoid this issue entirely.
   * Removed the cutscenes when throwing a bomb at and blowing up the boulder in front of Dodongo's Cavern.
   * Certain switches in MQ dungeons have been moved down 1 unit so they are less difficult for Link to walk onto.
   * The "Truth Spinner" puzzle in the Shadow Temple's solution is now seeded per seed, so that the correct skull will be consistent across players racing the same seed.
-  
+
 * **GUI**
   * Migration to latest Angular and Nebular framework versions
   * Dark Mode toggle
@@ -481,7 +481,7 @@ issue. You should always Hard Reset to avoid this issue entirely.
 
 * **Hints**
   * New option `Misc. Hints` controls whether the Temple of Time altar and Ganondorf give hints, defaulting on to preserve behavior. Hell Mode disables this setting.
-  * New `goal` hint type for use in custom hint distributions. 
+  * New `goal` hint type for use in custom hint distributions.
     * Default goals are included for the Rainbow Bridge, Ganon's Castle Boss Key, and Ganon's Trials settings.
     * Hints read as "They say that Kokiri Forest is on the path to Twinrova.", where the medallion or stone reward from defeating Twinrova can be used for the bridge or Ganon's Castle Boss Key. Twinrova is not necessarily required depending on other settings. For example, with 2 medallions for the bridge, all medallions accessible without entering Ganon's Castle, and Spirit Medallion on Twinrova, the hint only points to one possible path to building the rainbow bridge.
   * Hint distributions can now filter areas from being hinted as foolish, via putting the area names in `remove_locations`.
@@ -516,7 +516,7 @@ issue. You should always Hard Reset to avoid this issue entirely.
   * Cache chest sizes and colors in the actor to reduce some latency with Chest Size Matches Contents.
 
 * **Entrance Randomizer**
-  * Smarter replacement of required warp songs when warp songs are shuffled. 
+  * Smarter replacement of required warp songs when warp songs are shuffled.
   * Fix hint area validation to work with shuffled warp songs.
   * Fix dungeon entrance hints.
 
@@ -584,7 +584,7 @@ issue. You should always Hard Reset to avoid this issue entirely.
 * Various Quality of Life improvements
   * Speed up boulder lifting
   * Speed up Gold Gauntlet boulder lifting
-  * Speed up learning Windmill song 
+  * Speed up learning Windmill song
   * Speed up learning Malon's song
   * Speed up Kakariko gate opening and closing
   * Twinrova waits for player to reach the top platform before starting, preventing early snipes
@@ -668,7 +668,7 @@ issue. You should always Hard Reset to avoid this issue entirely.
   * New Bombchu trail inner & outer color settings, including a "Rainbow" option.
   * New Mirror Shield Frame color setting.
 * Added options to `Background Music` and `Fanfares` for randomly selecting only from [custom music](https://wiki.ootrandomizer.com/index.php?title=Readme#Custom_Music_and_Fanfares).
-  
+
 #### Updated Settings/Tricks
 * `Lens of Truth` setting has been removed and replaced with several independent tricks.
   * `Lensless Wasteland`: assumes you can navigate the Wasteland to the Colossus without the Lens of Truth.
@@ -798,7 +798,7 @@ issue. You should always Hard Reset to avoid this issue entirely.
     * To start with the Gerudo Membership Card, set `Gerudo Fortress` to `Open Fortress` and disable `Shuffle Gerudo Card` ('Main Rules' tab).
     * To start with the Scarecrow Song, enable `Free Scarecrow's Song` ('Other' tab).
 
-#### Updated Settings 
+#### Updated Settings
 * Open Zora Fountain now has an open only adult option.
 * Added a new setting `Ice Trap Appearance` to select whether ice traps appear as major items (the default), junk items, or anything. This appearance can affect chest size with `Chest Size Matches Contents` enabled.
 * Removed settings `Start with Fast Travel`, `Start with Tycoon's Wallet`, `Start with Deku Equipment`.
@@ -859,13 +859,13 @@ issue. You should always Hard Reset to avoid this issue entirely.
 ### 5.1
 
 #### New Features
-* `Skip First Dampé Race` 
+* `Skip First Dampé Race`
   * Allows getting both rewards in one race if the 60 second target is cleared
 * Rupee Icon Color changes based on your current wallet upgrade
 
-#### Updated Settings 
+#### Updated Settings
 * Improve `Ear Safe` to be less painful
-* `Tokensanity: Overworld Only` 
+* `Tokensanity: Overworld Only`
   * Shuffles Gold Skultulla Tokens in the overworld to compliment `Dungeons Only`
 * Configurable Skulltula target for the Bridge Requirement
 * `Randomize Main Rule Settings` still allows setting the `MQ Dungeon Count`
@@ -949,7 +949,7 @@ issue. You should always Hard Reset to avoid this issue entirely.
   * Speedup Owl Flying cutscenes to be almost instant.
   * Enable Useful Cutscenes setting added (see above in New Features)
 
-#### Updated Settings 
+#### Updated Settings
 * Filter added to `Location Exclusion` dropdown
 * More tricks added to the `Enable Tricks` dropdown
 * Shuffle Gerudo Card can now be enabled alongside Open Gerudo Fortress.
@@ -957,7 +957,7 @@ issue. You should always Hard Reset to avoid this issue entirely.
   * `Closed Deku`: Open Forest except Mido still blocks the Deku Tree
 * Dungeon Item Options
   * Added `Vanilla` placement option for small keys, boss keys and maps/compasses
-* Ganon's Boss Key 
+* Ganon's Boss Key
   * Split Ganon’s Boss Key settings from the rest of the Boss Keys setting
   * Added LACS options that place the key there.
     * This allows playing with open bridge while still requiring dungeon completion

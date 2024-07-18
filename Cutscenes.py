@@ -2,18 +2,23 @@ from typing import Optional
 
 from Rom import Rom
 
+
 def delete_cutscene(rom: Rom, address: int) -> None:
     # Address is the start of the cutscene commands.
     # Insert the CS END command at the start of the file.
     rom.write_int32(address + 4, 0xFFFFFFFF)
+
 
 def patch_cutscene_length(rom: Rom, address: int, new_length: int) -> None:
     # Address is the start of the cutscene commands.
     # Syntax is number of cutscene commands, then number of frames.
     rom.write_int32(address + 4, new_length)
 
+
 # Some cutscenes sends Link in a different location at the end. The command that sets the destination also sets the length of these cutscenes.
-def patch_cutscene_destination_and_length(rom: Rom, address: int, new_length: int, new_destination: Optional[int] = None) -> None:
+def patch_cutscene_destination_and_length(
+    rom: Rom, address: int, new_length: int, new_destination: Optional[int] = None
+) -> None:
     # Address is the start of the arguments of the CS_CMD_DESTINATION (or CS_TERMINATOR) command to modify.
     # The previous values should be respectively 0x000003E8 and 0x00000001.
     cmd_destination_value = rom.read_int32(address - 8)
@@ -26,50 +31,67 @@ def patch_cutscene_destination_and_length(rom: Rom, address: int, new_length: in
         rom.write_int16(address, new_destination)
     rom.write_int16(address + 2, new_length)
 
-def patch_textbox_during_cutscene(rom: Rom, address: int, textbox_id: int, start_frame: int, end_frame: int) -> None:
+
+def patch_textbox_during_cutscene(
+    rom: Rom, address: int, textbox_id: int, start_frame: int, end_frame: int
+) -> None:
     # Address is the start of the textboxes commands during cutscene.
     # Put textbox_id at 0 to delete a textbox that would show up otherwise.
     if textbox_id == 0:
-        rom.write_int16(address, 0xFFFF) # CS_TEXT_ID_NONE
+        rom.write_int16(address, 0xFFFF)  # CS_TEXT_ID_NONE
         rom.write_int16(address + 2, start_frame)
         rom.write_int16(address + 4, end_frame)
-        rom.write_int16(address + 6, 0xFFFF) # constant 0xFFFF
-        rom.write_int16(address + 8, 0xFFFF) # CS_TEXT_ID_NONE
-        rom.write_int16(address + 10, 0xFFFF) # CS_TEXT_ID_NONE
+        rom.write_int16(address + 6, 0xFFFF)  # constant 0xFFFF
+        rom.write_int16(address + 8, 0xFFFF)  # CS_TEXT_ID_NONE
+        rom.write_int16(address + 10, 0xFFFF)  # CS_TEXT_ID_NONE
     else:
         rom.write_int16(address, textbox_id)
         rom.write_int16(address + 2, start_frame)
         rom.write_int16(address + 4, end_frame)
-        rom.write_int16(address + 6, 0) # CutsceneTextType, always 0 unless we want to make a choice textbox.
-        rom.write_int16(address + 8, 0xFFFF) # First choice of a choice texbox
-        rom.write_int16(address + 10, 0xFFFF) # Second choice of a choice texbox
+        rom.write_int16(
+            address + 6, 0
+        )  # CutsceneTextType, always 0 unless we want to make a choice textbox.
+        rom.write_int16(address + 8, 0xFFFF)  # First choice of a choice texbox
+        rom.write_int16(address + 10, 0xFFFF)  # Second choice of a choice texbox
+
 
 # This is a special case of the function above, because ocarina textboxes are initialized differently.
-def patch_learn_song_textbox_during_cutscene(rom: Rom, address: int, ocarina_song_id: int, start_frame: int, end_frame: int) -> None:
+def patch_learn_song_textbox_during_cutscene(
+    rom: Rom, address: int, ocarina_song_id: int, start_frame: int, end_frame: int
+) -> None:
     # Address is the start of the textboxes commands during cutscene.
     rom.write_int16(address, ocarina_song_id)
     rom.write_int16(address + 2, start_frame)
     rom.write_int16(address + 4, end_frame)
-    rom.write_int16(address + 6, 0x0002) # constant CS_TEXT_OCARINA_ACTION
-    rom.write_int16(address + 8, 0x088B) # id of the textbox used to replay a song on Ocarina, also constant
-    rom.write_int16(address + 10, 0xFFFF) # Unused
+    rom.write_int16(address + 6, 0x0002)  # constant CS_TEXT_OCARINA_ACTION
+    rom.write_int16(
+        address + 8, 0x088B
+    )  # id of the textbox used to replay a song on Ocarina, also constant
+    rom.write_int16(address + 10, 0xFFFF)  # Unused
 
-def patch_cutscene_scene_transition(rom: Rom, address: int, transition_type: int, start_frame: int, end_frame:int) -> None:
+
+def patch_cutscene_scene_transition(
+    rom: Rom, address: int, transition_type: int, start_frame: int, end_frame: int
+) -> None:
     # Address is the start of the textboxes commands during cutscene.
-    rom.write_int16(address, transition_type) # CS_TEXT_ID_NONE
+    rom.write_int16(address, transition_type)  # CS_TEXT_ID_NONE
     rom.write_int16(address + 2, start_frame)
     rom.write_int16(address + 4, end_frame)
     rom.write_int16(address + 6, end_frame)
 
+
 # This is mostly used to set flags during cutscenes.
-def patch_cutscene_misc_command(rom: Rom, address: int, start_frame:int, end_frame:int, new_misc_type: Optional[int] = None) -> None:
+def patch_cutscene_misc_command(
+    rom: Rom, address: int, start_frame: int, end_frame: int, new_misc_type: Optional[int] = None
+) -> None:
     # Address should be the start of the CS_MISC command.
     if new_misc_type:
         rom.write_int16(address, new_misc_type)
     rom.write_int16(address + 2, start_frame)
     rom.write_int16(address + 4, end_frame)
 
-def patch_cutscenes(rom: Rom, songs_as_items:bool) -> None:
+
+def patch_cutscenes(rom: Rom, songs_as_items: bool) -> None:
     # Speed scene after Deku Tree
     # Deku Tree talking to Link.
     # Cut to 1 frame and redirect destination to the get Emerald cutscene (0x07).
@@ -220,14 +242,14 @@ def patch_cutscenes(rom: Rom, songs_as_items:bool) -> None:
     patch_cutscene_misc_command(rom, 0xE0A358, 1, 2)
 
     # Master Sword pedestal cutscene
-    patch_cutscene_destination_and_length(rom, 0xCB6BE8, 20) # Child => Adult
-    patch_cutscene_destination_and_length(rom, 0xCB75B8, 20) # Adult => Child
+    patch_cutscene_destination_and_length(rom, 0xCB6BE8, 20)  # Child => Adult
+    patch_cutscene_destination_and_length(rom, 0xCB75B8, 20)  # Adult => Child
 
     # Speed learning Song of Storms
     # The cutscene actually happens after learning the song, so we don't need to change the Ocarina texboxes.
     # But the flag for the check is set at frame 10 during the cutscene, so cut it short here, and just show the "You"ve learned.." textbox before.
     if songs_as_items:
-         delete_cutscene(rom, 0x03041080)
+        delete_cutscene(rom, 0x03041080)
     else:
         patch_cutscene_length(rom, 0x03041080, 10)
         # Display the 0x00D6 textbox (You've learned Song of Storms!) at frame 0.
@@ -240,10 +262,10 @@ def patch_cutscenes(rom: Rom, songs_as_items:bool) -> None:
 
     # Speed up Epona escape
     # We have to wait until Epona is on a not awkward spot.
-    patch_cutscene_length(rom, 0x1FC79E0, 84) # South
-    patch_cutscene_length(rom, 0x1FC7F00, 84) # East
-    patch_cutscene_length(rom, 0x1FC8550, 84) # West
-    patch_cutscene_length(rom, 0x1FC8B30, 42) # Front gates
+    patch_cutscene_length(rom, 0x1FC79E0, 84)  # South
+    patch_cutscene_length(rom, 0x1FC7F00, 84)  # East
+    patch_cutscene_length(rom, 0x1FC8550, 84)  # West
+    patch_cutscene_length(rom, 0x1FC8B30, 42)  # Front gates
 
     # Speed learning Minuet of Forest
     if songs_as_items:
@@ -289,7 +311,7 @@ def patch_cutscenes(rom: Rom, songs_as_items:bool) -> None:
         delete_cutscene(rom, 0x0252FD20)
     else:
         patch_cutscene_length(rom, 0x0252FD20, 74)
-         # Display the Minuet learn Ocarina textbox at frame 0.
+        # Display the Minuet learn Ocarina textbox at frame 0.
         patch_learn_song_textbox_during_cutscene(rom, 0x02531328, 20, 0, 16)
         # Display the 0x0078 textbox (You have learned the Prelude of Light!) between 17 and 32 frames.
         patch_textbox_during_cutscene(rom, 0x02531334, 0x0078, 17, 32)

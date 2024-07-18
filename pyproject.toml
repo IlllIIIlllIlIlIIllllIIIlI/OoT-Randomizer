@@ -1,0 +1,19 @@
+[tool.black]
+line-length = 100
+include = '\.pyi?$'
+
+[tool.ruff]
+include = ['\.pyi?$']
+line-length = 100
+indent-width = 4
+
+[tool.ruff.lint]
+fixable = ["ALL"]
+ignore = ["E731", "E722"]
+
+# Black compatability
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
