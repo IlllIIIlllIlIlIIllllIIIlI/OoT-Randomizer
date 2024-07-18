@@ -123,7 +123,9 @@ class World:
                 )
             )
             if plando_adult_trade:
-                self.selected_adult_trade_item = plando_adult_trade[0][
+                self.selected_adult_trade_item = plando_adult_trade[
+                    0
+                ][
                     1
                 ].item  # ugly but functional, see the loop in Plandomizer.WorldDistribution.fill for how this is indexed
         self.adult_trade_starting_inventory: str = ""

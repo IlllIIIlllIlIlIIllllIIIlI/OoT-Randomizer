@@ -152,9 +152,9 @@ class Search:
                     ):
                         exit_queue.extend(failed)
                         failed = []
-                        regions[
-                            exit.world.get_region("Root")
-                        ] |= exit.connected_region.provides_time
+                        regions[exit.world.get_region("Root")] |= (
+                            exit.connected_region.provides_time
+                        )
                     regions[exit.connected_region] = exit.connected_region.provides_time
                     exit_queue.extend(exit.connected_region.exits)
                 else:

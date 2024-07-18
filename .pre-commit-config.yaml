@@ -1,6 +1,6 @@
 repos:
   -   repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v2.3.0
+      rev: v4.6.0
       hooks:
       -   id: check-yaml
       -   id: end-of-file-fixer
@@ -12,3 +12,14 @@ repos:
       - id: ruff
         args: [ --fix ]
       - id: ruff-format
+
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.3.5
+    hooks:
+      - id: clang-format
+        args: [--style=Google, -i]
+      - id: clang-tidy
+        args: [--fix-errors]
+      - id: uncrustify
+        args: [-c, uncrustify.cfg, --replace, --no-backup]
+      - id: cppcheck

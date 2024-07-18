@@ -5,17 +5,17 @@
 #include "z64.h"
 
 typedef struct {
-    uint8_t index;
-    struct {
-        uint8_t has_keys : 1;
-        uint8_t has_boss_key : 1;
-        uint8_t has_card : 1;
-        uint8_t has_map : 1;
-    };
-    uint8_t skulltulas;
-    char name[11];
-    uint8_t silver_rupee_puzzles_vanilla[4];
-    uint8_t silver_rupee_puzzles_mq[4];
+	uint8_t index;
+	struct {
+		uint8_t has_keys : 1;
+		uint8_t has_boss_key : 1;
+		uint8_t has_card : 1;
+		uint8_t has_map : 1;
+	};
+	uint8_t skulltulas;
+	char name[11];
+	uint8_t silver_rupee_puzzles_vanilla[4];
+	uint8_t silver_rupee_puzzles_mq[4];
 } dungeon_entry_t;
 
 extern int dungeon_count;
@@ -33,10 +33,10 @@ extern uint8_t CFG_DPAD_DUNGEON_INFO_ENABLE;
 
 static int show_dungeon_info = 0;
 
-#define CAN_DRAW_DUNGEON_INFO (CFG_DUNGEON_INFO_ENABLE != 0 && \
-        z64_game.pause_ctxt.state == PAUSE_STATE_MAIN && \
-        z64_game.pause_ctxt.screen_idx == 0 && \
-        (!z64_game.pause_ctxt.changing || \
-        z64_game.pause_ctxt.changing == 3))
+#define CAN_DRAW_DUNGEON_INFO                       \
+	(CFG_DUNGEON_INFO_ENABLE != 0 &&                  \
+	 z64_game.pause_ctxt.state == PAUSE_STATE_MAIN && \
+	 z64_game.pause_ctxt.screen_idx == 0 &&           \
+	 (!z64_game.pause_ctxt.changing || z64_game.pause_ctxt.changing == 3))
 
 #endif

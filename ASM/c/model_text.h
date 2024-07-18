@@ -1,10 +1,10 @@
 #ifndef MODEL_TEXT_H
 #define MODEL_TEXT_H
 
-#include "z64.h"
 #include "gfx.h"
 #include "text.h"
 #include "util.h"
+#include "z64.h"
 
 extern uint16_t illegal_model;
 

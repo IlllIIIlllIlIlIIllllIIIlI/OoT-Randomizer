@@ -1,3 +1,5 @@
-black==24.4.2
+clang-format==18.1.8
+clang-tidy==18.1.8
+cpplint==1.6.1
 pre-commit==3.7.1
 ruff==0.5.2

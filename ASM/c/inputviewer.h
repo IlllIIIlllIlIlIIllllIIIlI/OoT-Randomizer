@@ -1,9 +1,9 @@
 #ifndef INPUTVIEWER_H
 #define INPUTVIEWER_H
 
-#include "z64.h"
 #include "gfx.h"
 #include "text.h"
+#include "z64.h"
 
 extern colorRGB16_t CFG_A_BUTTON_COLOR;
 extern colorRGB16_t CFG_B_BUTTON_COLOR;

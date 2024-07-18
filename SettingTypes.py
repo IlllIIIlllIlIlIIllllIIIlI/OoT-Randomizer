@@ -22,12 +22,8 @@ class SettingInfo:
         gui_params: Optional[dict] = None,
         cosmetic: bool = False,
     ) -> None:
-        self.type: type = (
-            setting_type  # type of the setting's value, used to properly convert types to setting strings
-        )
-        self.shared: bool = (
-            shared  # whether the setting is one that should be shared, used in converting settings to a string
-        )
+        self.type: type = setting_type  # type of the setting's value, used to properly convert types to setting strings
+        self.shared: bool = shared  # whether the setting is one that should be shared, used in converting settings to a string
         self.cosmetic: bool = cosmetic  # whether the setting should be included in the cosmetic log
         self.gui_text: Optional[str] = gui_text
         self.gui_type: Optional[str] = gui_type

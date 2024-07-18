@@ -5,8 +5,10 @@
 
 typedef void (*duplicate_sys_matrix_fn)(void);
 typedef void (*pop_sys_matrix_fn)(void);
-typedef void (*translate_sys_matrix_fn)(float x, float y, float z, int32_t in_place_flag);
-typedef void (*scale_sys_matrix_fn)(float x, float y, float z, int32_t in_place_flag);
+typedef void (*translate_sys_matrix_fn)(float x, float y, float z,
+                                        int32_t in_place_flag);
+typedef void (*scale_sys_matrix_fn)(float x, float y, float z,
+                                    int32_t in_place_flag);
 typedef void (*rotate_Z_sys_matrix_fn)(float z, int32_t in_place_flag);
 typedef void (*update_sys_matrix_fn)(float mf[4][4]);
 typedef Mtx* (*append_sys_matrix_fn)(z64_gfx_t* gfx);
